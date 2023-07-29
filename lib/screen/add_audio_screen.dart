@@ -13,7 +13,7 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
   final TextEditingController _musicNameController = TextEditingController();
   final TextEditingController _musicURLController = TextEditingController();
   final TextEditingController _totalLengthController = TextEditingController();
-  var isTyped = false;
+  var isEmpty = false;
   late AppDb _db;
 
   @override
@@ -33,22 +33,21 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
     super.dispose();
   }
 
-  void checkTextField() {
+  void checkTextFieldIsEmpty() {
     if (_musicNameController.text.isEmpty ||
         _musicURLController.text.isEmpty ||
         _totalLengthController.text.isEmpty) {
       setState(() {
-        isTyped = false;
+        isEmpty = true;
       });
     } else {
       setState(() {
-        isTyped = true;
+        isEmpty = false;
       });
     }
   }
 
-  void addAudioToDb(){
-
+  void addAudioToDb() {
     final entity = AudioEntityCompanion(
       audioName: drift.Value(_musicNameController.text),
       audioURL: drift.Value(_musicURLController.text),
@@ -57,15 +56,14 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
     );
 
     _db.insertAudio(entity).then((value) => ScaffoldMessenger.of(context)
-        .showMaterialBanner(
-      MaterialBanner(
-          content: Text('New audio inserted $value'),
-          actions: [
-            TextButton(
-                onPressed: () => ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
-                child: const Text('Close'))
-          ])
-    ));
+            .showMaterialBanner(MaterialBanner(
+                content: Text('New audio inserted $value'),
+                actions: [
+              TextButton(
+                  onPressed: () =>
+                      ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
+                  child: const Text('Close'))
+            ])));
     _musicNameController.clear();
     _musicURLController.clear();
     _totalLengthController.clear();
@@ -88,7 +86,7 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
               children: [
                 TextField(
                   enableInteractiveSelection: true,
-                  onChanged: (value) => checkTextField(),
+                  onChanged: (value) => checkTextFieldIsEmpty(),
                   keyboardType: TextInputType.name,
                   controller: _musicNameController,
                   decoration: const InputDecoration(
@@ -98,7 +96,7 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
                 const SizedBox(height: 15),
                 TextField(
                   enableInteractiveSelection: true,
-                  onChanged: (value) => checkTextField(),
+                  onChanged: (value) => checkTextFieldIsEmpty(),
                   keyboardType: TextInputType.name,
                   controller: _musicURLController,
                   decoration: const InputDecoration(
@@ -108,7 +106,7 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
                 const SizedBox(height: 15),
                 TextField(
                   enableInteractiveSelection: true,
-                  onChanged: (value) => checkTextField(),
+                  onChanged: (value) => checkTextFieldIsEmpty(),
                   keyboardType: TextInputType.number,
                   controller: _totalLengthController,
                   decoration: const InputDecoration(
@@ -123,9 +121,11 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
                     minWidth: screenWidth,
                     height: screenHeight / 18,
                     color: Colors.blue,
-                    onPressed: isTyped ? () {
-                      addAudioToDb();
-                    } : null,
+                    onPressed: isEmpty
+                        ? null
+                        : () {
+                            addAudioToDb();
+                          },
                     child: const Text("Add",
                         style: TextStyle(
                           color: Colors.white,
