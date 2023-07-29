@@ -24,6 +24,15 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
     _db = AppDb();
   }
 
+  @override
+  void dispose() {
+    _db.close();
+    _musicNameController.dispose();
+    _musicURLController.dispose();
+    _totalLengthController.dispose();
+    super.dispose();
+  }
+
   void checkTextField() {
     if (_musicNameController.text.isEmpty ||
         _musicURLController.text.isEmpty ||
