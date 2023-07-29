@@ -1,3 +1,4 @@
+import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:audio_player_list_with_drift/model/audio_model.dart';
 import 'package:audio_player_list_with_drift/route/app_route.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,21 @@ class _AudioListScreenState extends State<AudioListScreen> {
     AudioModel(audioName: "Paza Module", audioURL: "http://codeskulptor-demos.commondatastorage.googleapis.com/pang/paza-moduless.mp3", start: 0, total: 179),
   ];
 
+  late AppDb _db;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _db = AppDb();
+  }
+
+  @override
+  void dispose() {
+    _db.close();
+    super.dispose();
+  }
+
   String _formatDuration(Duration duration) {
     String playedMinutesString = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
     String playedSecondsString = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
@@ -30,16 +46,16 @@ class _AudioListScreenState extends State<AudioListScreen> {
     Navigator.pushNamed(context, AppRouter.addAudioScreen);
   }
 
-  void navigateToAudioDetailsScreen(){
+  void navigateToAudioDetailsScreen(int audioId){
 
-    Navigator.pushNamed(context, AppRouter.audioDetailsScreen);
+    Navigator.pushNamed(context, AppRouter.audioDetailsScreen, arguments: audioId);
   }
 
   @override
   Widget build(BuildContext context) {
 
     double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
+    // double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       appBar: AppBar(
@@ -56,35 +72,58 @@ class _AudioListScreenState extends State<AudioListScreen> {
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 10),
           height: screenHeight * 0.9,
-          child:
-          audioList.length != null
-          ? ListView.builder(
-              itemCount: audioList.length,
-              itemBuilder: (context, index){
-                return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Card(
-                  child: ListTile(
-                    onTap: navigateToAudioDetailsScreen,
-                    title: Text(audioList[index].audioName!),
-                    subtitle: Text("${audioList[index].start!} - ${_formatDuration(Duration(seconds: audioList[index].total!))}"),
-                    trailing: Container(
-                      decoration: BoxDecoration(
-                          color: Colors.blue,
-                          borderRadius: BorderRadius.circular(50)
-                      ),
-                      child: IconButton(
-                        icon: const Icon(
-                            color: Colors.black,
-                            Icons.play_arrow
-                        ),
-                        onPressed: (){},
-                      ),
-                    ),
-                  ),
-                ),);
-              })
-          : Container(),
+          child: FutureBuilder<List<AudioEntityData>>(
+            future: _db.getAudioList(),
+            builder: (context, snapshot){
+              final List<AudioEntityData>? audioList = snapshot.data;
+
+              if(snapshot.connectionState != ConnectionState.done){
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              if(snapshot.hasError){
+                return Center(
+                  child: Text(snapshot.error.toString()),
+                );
+              }
+
+              if(audioList != null){
+
+                return ListView.builder(
+                    itemCount: audioList.length,
+                    itemBuilder: (context, index){
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Card(
+                          child: ListTile(
+                            onTap: (){
+                              navigateToAudioDetailsScreen(audioList[index].audioId);
+                            },
+                            title: Text(audioList[index].audioName),
+                            subtitle: Text("0 - ${_formatDuration(Duration(seconds: audioList[index].totalLength!))}"),
+                            trailing: Container(
+                              decoration: BoxDecoration(
+                                  color: Colors.blue,
+                                  borderRadius: BorderRadius.circular(50)
+                              ),
+                              child: IconButton(
+                                icon: const Icon(
+                                    color: Colors.black,
+                                    Icons.play_arrow
+                                ),
+                                onPressed: (){},
+                              ),
+                            ),
+                          ),
+                        ),);
+                    });
+              }
+              return Container();
+            },
+          )
+
         ),
       ),
     );
