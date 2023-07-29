@@ -2,8 +2,11 @@ import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 
+enum ClearTextFieldType { musicName, musicURL, totalLength }
+
 class EditAudioScreen extends StatefulWidget {
   final int audioId;
+
   const EditAudioScreen({super.key, required this.audioId});
 
   @override
@@ -14,7 +17,10 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
   final TextEditingController _musicNameController = TextEditingController();
   final TextEditingController _musicURLController = TextEditingController();
   final TextEditingController _totalLengthController = TextEditingController();
-  var isTyped = false;
+  var isEmpty = false,
+      isMusicNameEmpty = false,
+      isMusicURLEmpty = false,
+      isTotalLengthEmpty = false;
   late AppDb _db;
   AudioEntityData? _audioEntityData;
 
@@ -43,39 +49,95 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
   }
 
   void checkTextField() {
-    if (_musicNameController.text.isEmpty ||
+    if (_musicNameController.text.isEmpty &&
+        _musicURLController.text.isNotEmpty &&
+        _totalLengthController.text.isNotEmpty) {
+      setState(() {
+        isMusicNameEmpty = true;
+        isMusicURLEmpty = false;
+        isTotalLengthEmpty = false;
+        isEmpty = true;
+      });
+    } else if (_musicNameController.text.isNotEmpty &&
+        _musicURLController.text.isNotEmpty &&
+        _totalLengthController.text.isEmpty) {
+      setState(() {
+        isMusicNameEmpty = false;
+        isMusicURLEmpty = false;
+        isTotalLengthEmpty = true;
+        isEmpty = true;
+      });
+    } else if (_musicNameController.text.isNotEmpty &&
+        _musicURLController.text.isEmpty &&
+        _totalLengthController.text.isNotEmpty) {
+      setState(() {
+        isMusicNameEmpty = false;
+        isMusicURLEmpty = true;
+        isTotalLengthEmpty = false;
+        isEmpty = true;
+      });
+    } else if (_musicNameController.text.isEmpty ||
         _musicURLController.text.isEmpty ||
         _totalLengthController.text.isEmpty) {
       setState(() {
-        isTyped = false;
+        isMusicNameEmpty = true;
+        isMusicURLEmpty = true;
+        isTotalLengthEmpty = true;
+        isEmpty = true;
       });
     } else {
       setState(() {
-        isTyped = true;
+        isMusicNameEmpty = false;
+        isMusicURLEmpty = false;
+        isTotalLengthEmpty = false;
+        isEmpty = false;
       });
     }
   }
 
-  void addAudioToDb() {
+  void clearTextField(ClearTextFieldType clearTextFieldType) {
+    switch (clearTextFieldType) {
+      case ClearTextFieldType.musicName:
+        _musicNameController.clear();
+        setState(() {
+          isEmpty = true;
+          isMusicNameEmpty = true;
+        });
+        break;
+      case ClearTextFieldType.musicURL:
+        _musicURLController.clear();
+        setState(() {
+          isEmpty = true;
+          isMusicURLEmpty = true;
+        });
+        break;
+      case ClearTextFieldType.totalLength:
+        _totalLengthController.clear();
+        setState(() {
+          isEmpty = true;
+          isTotalLengthEmpty = true;
+        });
+        break;
+    }
+  }
+
+  void editAudioToDb() {
     final entity = AudioEntityCompanion(
+      audioId: drift.Value(widget.audioId),
       audioName: drift.Value(_musicNameController.text),
       audioURL: drift.Value(_musicURLController.text),
       totalLength: drift.Value(int.parse(_totalLengthController.text)),
       playPosition: const drift.Value(0),
     );
 
-    _db.insertAudio(entity).then((value) => ScaffoldMessenger.of(context)
-            .showMaterialBanner(MaterialBanner(
-                content: Text('New audio inserted $value'),
-                actions: [
-              TextButton(
-                  onPressed: () =>
-                      ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
-                  child: const Text('Close'))
-            ])));
-    _musicNameController.clear();
-    _musicURLController.clear();
-    _totalLengthController.clear();
+    _db.updateAudio(entity).then((value) => ScaffoldMessenger.of(context)
+            .showMaterialBanner(
+                MaterialBanner(content: Text('Update audio: $value'), actions: [
+          TextButton(
+              onPressed: () =>
+                  ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
+              child: const Text('Close'))
+        ])));
   }
 
   @override
@@ -98,9 +160,15 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
                   onChanged: (value) => checkTextField(),
                   keyboardType: TextInputType.name,
                   controller: _musicNameController,
-                  decoration: const InputDecoration(
-                    labelText: "Music Name",
-                  ),
+                  decoration: InputDecoration(
+                      labelText: "Music Name",
+                      suffixIcon: isMusicNameEmpty
+                          ? null
+                          : IconButton(
+                              onPressed: () {
+                                clearTextField(ClearTextFieldType.musicName);
+                              },
+                              icon: const Icon(Icons.clear_rounded))),
                 ),
                 const SizedBox(height: 15),
                 TextField(
@@ -108,9 +176,15 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
                   onChanged: (value) => checkTextField(),
                   keyboardType: TextInputType.name,
                   controller: _musicURLController,
-                  decoration: const InputDecoration(
-                    labelText: "Music URL",
-                  ),
+                  decoration: InputDecoration(
+                      labelText: "Music URL",
+                      suffixIcon: isMusicURLEmpty
+                          ? null
+                          : IconButton(
+                              onPressed: () {
+                                clearTextField(ClearTextFieldType.musicURL);
+                              },
+                              icon: const Icon(Icons.clear_rounded))),
                 ),
                 const SizedBox(height: 15),
                 TextField(
@@ -118,9 +192,15 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
                   onChanged: (value) => checkTextField(),
                   keyboardType: TextInputType.number,
                   controller: _totalLengthController,
-                  decoration: const InputDecoration(
-                    labelText: "Total Length",
-                  ),
+                  decoration: InputDecoration(
+                      labelText: "Total Length",
+                      suffixIcon: isTotalLengthEmpty
+                          ? null
+                          : IconButton(
+                              onPressed: () {
+                                clearTextField(ClearTextFieldType.totalLength);
+                              },
+                              icon: const Icon(Icons.clear_rounded))),
                 ),
                 const SizedBox(height: 15),
                 MaterialButton(
@@ -130,11 +210,11 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
                     minWidth: screenWidth,
                     height: screenHeight / 18,
                     color: Colors.blue,
-                    onPressed: isTyped
-                        ? () {
-                            addAudioToDb();
-                          }
-                        : null,
+                    onPressed: isEmpty
+                        ? null
+                        : () {
+                            editAudioToDb();
+                          },
                     child: const Text("Edit",
                         style: TextStyle(
                           color: Colors.white,
