@@ -13,7 +13,7 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
   final TextEditingController _musicNameController = TextEditingController();
   final TextEditingController _musicURLController = TextEditingController();
   final TextEditingController _totalLengthController = TextEditingController();
-  var isEmpty = false;
+  var isEmpty = true;
   late AppDb _db;
 
   @override
