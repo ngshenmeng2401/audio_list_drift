@@ -1,5 +1,6 @@
 import 'package:audio_player_list_with_drift/screen/add_audio_screen.dart';
 import 'package:audio_player_list_with_drift/screen/audio_details_screen.dart';
+import 'package:audio_player_list_with_drift/screen/edit_audio_screen.dart';
 import 'package:audio_player_list_with_drift/screen/audio_list_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -8,24 +9,47 @@ class AppRouter{
   static const String audioPlayerListScreen = '/';
   static const String addAudioScreen = '/addAudioScreen';
   static const String audioDetailsScreen = '/audioDetailsScreen';
+  static const String editAudioScreen = '/editAudioScreen';
 
-  static Route<dynamic> generatedRoute(RouteSettings settings) {
+  static Route<dynamic>? generatedRoute(RouteSettings settings) {
 
-    final screen;
+    final args = settings.arguments;
 
     switch (settings.name){
       case audioPlayerListScreen:
-        screen =  MaterialPageRoute(builder: (_) => const AudioListScreen());
-        break;
+        return MaterialPageRoute(builder: (_) => const AudioListScreen());
+
       case addAudioScreen:
-        screen =  MaterialPageRoute(builder: (_) => const AddAudioScreen());
+        return MaterialPageRoute(builder: (_) => const AddAudioScreen());
+
+      case editAudioScreen:
+        if(args is int){
+          return MaterialPageRoute(builder: (_) => EditAudioScreen(audioId: args));
+        }
         break;
+
       case audioDetailsScreen:
-        screen =  MaterialPageRoute(builder: (_) => const AudioDetailsScreen());
+        if(args is int){
+          return MaterialPageRoute(builder: (_) => AudioDetailsScreen(audioId: args));
+        }
         break;
       default:
-        throw UnimplementedError('Unimplemented route: $settings.name');
+        return _errorRoute();
+        // throw UnimplementedError('Unimplemented route: $settings.name');
     }
-    return screen;
+  }
+
+  static Route<dynamic> _errorRoute(){
+
+    return MaterialPageRoute(builder: (_) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text("No route"),
+        ),
+        body: const Center(
+          child: Text("Sorry, no route"),
+        ),
+      );
+    });
   }
 }
