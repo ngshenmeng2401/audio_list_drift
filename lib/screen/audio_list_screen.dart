@@ -59,7 +59,7 @@ class _AudioListScreenState extends State<AudioListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("Audio List"),
+        title: const Text("Audio List"),
         actions: [
           IconButton(
               onPressed: navigateToAddAudioScreen,
