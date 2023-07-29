@@ -26,6 +26,9 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
 
   Future<void> getAudioData() async {
     _audioEntityData = await _db.getAudio(widget.audioId);
+    setState(() {
+      _audioEntityData = _audioEntityData;
+    });
   }
 
   void navigateToEditAudioScreen(int audioId) {
@@ -50,8 +53,9 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
       body: SingleChildScrollView(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: Column(
+            padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+            child: _audioEntityData != null ?
+            Column(
               children: [
                 Text(
                   _audioEntityData!.audioName,
@@ -84,7 +88,8 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
                   ),
                 ),
               ],
-            ),
+            )
+            : Container(),
           ),
         ),
       ),
