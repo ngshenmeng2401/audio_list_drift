@@ -130,14 +130,28 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
       playPosition: const drift.Value(0),
     );
 
-    _db.updateAudio(entity).then((value) => ScaffoldMessenger.of(context)
-            .showMaterialBanner(
-                MaterialBanner(content: Text('Update audio: $value'), actions: [
-          TextButton(
-              onPressed: () =>
-                  ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
-              child: const Text('Close'))
-        ])));
+    _db.updateAudio(entity).then((value) => showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Successful'),
+          content: const Text(
+            '',
+          ),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    ));
   }
 
   @override
