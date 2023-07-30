@@ -1,6 +1,7 @@
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:audio_player_list_with_drift/model/audio_model.dart';
 import 'package:audio_player_list_with_drift/route/app_route.dart';
+import 'package:audio_player_list_with_drift/screen/audio_details_screen.dart';
 import 'package:flutter/material.dart';
 
 class AudioListScreen extends StatefulWidget {
@@ -12,20 +13,16 @@ class AudioListScreen extends StatefulWidget {
 
 class _AudioListScreenState extends State<AudioListScreen> {
 
-  List<AudioModel> audioList = <AudioModel>[
-    AudioModel(audioName: "Kangaroo MusiQue", audioURL: "http://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3", start: 0, total: 127),
-    AudioModel(audioName: "Sevish", audioURL: "http://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Sevish_-__nbsp_.mp3", start: 0, total: 134),
-    AudioModel(audioName: "Music 1", audioURL: "https://freetestdata.com/wp-content/uploads/2021/09/Free_Test_Data_1MB_MP3.mp3", start: 0, total: 43),
-    AudioModel(audioName: "Paza Module", audioURL: "http://codeskulptor-demos.commondatastorage.googleapis.com/pang/paza-moduless.mp3", start: 0, total: 179),
-  ];
-
   late AppDb _db;
+  List<bool> isPlayedList = [];
+  List<AudioEntityData>? audioList;
 
   @override
   void initState() {
     super.initState();
 
     _db = AppDb();
+    getAudioListData();
   }
 
   @override
@@ -43,12 +40,51 @@ class _AudioListScreenState extends State<AudioListScreen> {
 
   void navigateToAddAudioScreen(){
 
-    Navigator.pushNamed(context, AppRouter.addAudioScreen);
+    Navigator.pushNamed(context, AppRouter.addAudioScreen).then((value) => (){
+      setState(() {
+        getAudioListData();
+      });
+    });
   }
 
-  void navigateToAudioDetailsScreen(int audioId){
+  Future<void> navigateToAudioDetailsScreen(int audioId) async {
 
-    Navigator.pushNamed(context, AppRouter.audioDetailsScreen, arguments: audioId);
+    final result = await Navigator.push(
+      context,
+      // Create the SelectionScreen in the next step.
+      MaterialPageRoute(builder: (context) => AudioDetailsScreen(audioId: audioId)),
+    ).then((value) => (){
+      setState(() {
+        getAudioListData();
+      });
+    });
+
+    if(result != null && result == true){
+      setState(() {
+        getAudioListData();
+      });
+    }
+  }
+
+  Future<void> getAudioListData() async {
+    audioList = await _db.getAudioList();
+
+    if(audioList != null){
+      for(int i = 0 ; i < audioList!.length ; i++){
+        isPlayedList.insert(i, false);
+      }
+    }
+
+    print("isPlayedList: $isPlayedList");
+  }
+
+  void playAudio(bool isPlayed, int index){
+
+    setState(() {
+      isPlayed == true
+          ? isPlayedList[index] = false
+          : isPlayedList[index] = true;
+    });
   }
 
   @override
@@ -108,12 +144,24 @@ class _AudioListScreenState extends State<AudioListScreen> {
                                   color: Colors.blue,
                                   borderRadius: BorderRadius.circular(50)
                               ),
-                              child: IconButton(
+                              child: !isPlayedList[index]
+                              ? IconButton(
                                 icon: const Icon(
-                                    color: Colors.black,
-                                    Icons.play_arrow
+                                    color: Colors.white,
+                                    Icons.play_arrow,
                                 ),
-                                onPressed: (){},
+                                onPressed: (){
+                                  playAudio(isPlayedList[index], index);
+                                },
+                              )
+                              : IconButton(
+                                icon: const Icon(
+                                    color: Colors.white,
+                                    Icons.pause
+                                ),
+                                onPressed: (){
+                                  playAudio(isPlayedList[index], index);
+                                },
                               ),
                             ),
                           ),
