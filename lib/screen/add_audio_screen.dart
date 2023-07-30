@@ -55,15 +55,28 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
       playPosition: const drift.Value(0),
     );
 
-    _db.insertAudio(entity).then((value) => ScaffoldMessenger.of(context)
-            .showMaterialBanner(MaterialBanner(
-                content: Text('New audio inserted $value'),
-                actions: [
-              TextButton(
-                  onPressed: () =>
-                      ScaffoldMessenger.of(context).hideCurrentMaterialBanner(),
-                  child: const Text('Close'))
-            ])));
+    _db.insertAudio(entity).then((value) => showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add Successful'),
+          content: const Text(
+            '',
+          ),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    ));
     _musicNameController.clear();
     _musicURLController.clear();
     _totalLengthController.clear();
