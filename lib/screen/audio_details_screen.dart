@@ -1,10 +1,10 @@
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:audio_player_list_with_drift/route/app_route.dart';
+import 'package:audio_player_list_with_drift/screen/audio_list_screen.dart';
 import 'package:flutter/material.dart';
 
 class AudioDetailsScreen extends StatefulWidget {
   final int audioId;
-
   const AudioDetailsScreen({super.key, required this.audioId});
 
   @override
@@ -14,6 +14,7 @@ class AudioDetailsScreen extends StatefulWidget {
 class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
   late AppDb _db;
   AudioEntityData? _audioEntityData;
+  bool isPlayed = false;
 
   @override
   void initState() {
@@ -35,6 +36,56 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
     Navigator.pushNamed(context, AppRouter.editAudioScreen, arguments: audioId);
   }
 
+  void playAudio(bool isPlay){
+
+    setState(() {
+      isPlay == false
+          ? isPlayed = true
+          : isPlayed = false;
+    });
+  }
+
+  Future<void> showDeleteAudioDialog(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Audio'),
+          content: const Text(
+            'Are you sure want to delete this audio ?',
+          ),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                deleteAudio();
+                Navigator.pop(context,true);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void deleteAudio(){
+
+    _db.deleteAudio(widget.audioId);
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
@@ -47,7 +98,9 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
           IconButton(onPressed: () {
             navigateToEditAudioScreen(_audioEntityData!.audioId);
           }, icon: const Icon(Icons.edit_outlined)),
-          const IconButton(onPressed: null, icon: Icon(Icons.delete)),
+          IconButton(onPressed: () {
+            showDeleteAudioDialog(context);
+          }, icon: const Icon(Icons.delete)),
         ],
       ),
       body: SingleChildScrollView(
@@ -78,13 +131,26 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
                   width: screenWidth * 0.2,
                   decoration: const BoxDecoration(
                       color: Colors.blue, shape: BoxShape.circle),
-                  child: const IconButton(
+                  child: !isPlayed
+                  ? IconButton(
                     icon: Icon(
                       Icons.play_arrow,
                       color: Colors.white,
                       size: 50,
                     ),
-                    onPressed: null,
+                    onPressed: (){
+                      playAudio(isPlayed);
+                    },
+                  )
+                  : IconButton(
+                    icon: Icon(
+                      Icons.pause,
+                      color: Colors.white,
+                      size: 50,
+                    ),
+                    onPressed: (){
+                      playAudio(isPlayed);
+                    },
                   ),
                 ),
               ],
