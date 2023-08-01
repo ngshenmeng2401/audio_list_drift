@@ -3,7 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 
 class AddAudioScreen extends StatefulWidget {
-  const AddAudioScreen({super.key});
+  final AddAudioScreenArguments arguments;
+
+  const AddAudioScreen({
+    Key? key,
+    required Object? arguments,
+  })  : assert(arguments != null && arguments is AddAudioScreenArguments),
+        this.arguments = arguments as AddAudioScreenArguments,
+        super(key: key);
 
   @override
   State<AddAudioScreen> createState() => _AddAudioScreenState();
@@ -15,6 +22,7 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
   final TextEditingController _totalLengthController = TextEditingController();
   var isEmpty = true;
   late AppDb _db;
+  var addIndex = 0;
 
   @override
   void initState() {
@@ -31,6 +39,11 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
     _musicURLController.dispose();
     _totalLengthController.dispose();
     super.dispose();
+  }
+
+  Future<bool> _onWillPop() async {
+    widget.arguments.backButtonCallback();
+    return true;
   }
 
   void checkTextFieldIsEmpty() {
@@ -53,6 +66,7 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
       audioURL: drift.Value(_musicURLController.text),
       totalLength: drift.Value(int.parse(_totalLengthController.text)),
       playPosition: const drift.Value(0),
+      isPlaying: const drift.Value(false),
     );
 
     _db.insertAudio(entity).then((value) => showDialog<void>(
@@ -87,68 +101,79 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Add Audio"),
-      ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-            child: Column(
-              children: [
-                TextField(
-                  enableInteractiveSelection: true,
-                  onChanged: (value) => checkTextFieldIsEmpty(),
-                  keyboardType: TextInputType.name,
-                  controller: _musicNameController,
-                  decoration: const InputDecoration(
-                    labelText: "Music Name",
-                  ),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  enableInteractiveSelection: true,
-                  onChanged: (value) => checkTextFieldIsEmpty(),
-                  keyboardType: TextInputType.name,
-                  controller: _musicURLController,
-                  decoration: const InputDecoration(
-                    labelText: "Music URL",
-                  ),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  enableInteractiveSelection: true,
-                  onChanged: (value) => checkTextFieldIsEmpty(),
-                  keyboardType: TextInputType.number,
-                  controller: _totalLengthController,
-                  decoration: const InputDecoration(
-                    labelText: "Total Length",
-                  ),
-                ),
-                const SizedBox(height: 15),
-                MaterialButton(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("Add Audio"),
+        ),
+        body: SingleChildScrollView(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+              child: Column(
+                children: [
+                  TextField(
+                    enableInteractiveSelection: true,
+                    onChanged: (value) => checkTextFieldIsEmpty(),
+                    keyboardType: TextInputType.name,
+                    controller: _musicNameController,
+                    decoration: const InputDecoration(
+                      labelText: "Music Name",
                     ),
-                    minWidth: screenWidth,
-                    height: screenHeight / 18,
-                    color: Colors.blue,
-                    onPressed: isEmpty
-                        ? null
-                        : () {
-                            addAudioToDb();
-                          },
-                    child: const Text("Add",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                        )))
-              ],
+                  ),
+                  const SizedBox(height: 15),
+                  TextField(
+                    enableInteractiveSelection: true,
+                    onChanged: (value) => checkTextFieldIsEmpty(),
+                    keyboardType: TextInputType.name,
+                    controller: _musicURLController,
+                    decoration: const InputDecoration(
+                      labelText: "Music URL",
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  TextField(
+                    enableInteractiveSelection: true,
+                    onChanged: (value) => checkTextFieldIsEmpty(),
+                    keyboardType: TextInputType.number,
+                    controller: _totalLengthController,
+                    decoration: const InputDecoration(
+                      labelText: "Total Length",
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  MaterialButton(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      minWidth: screenWidth,
+                      height: screenHeight / 18,
+                      color: Colors.blue,
+                      onPressed: isEmpty
+                          ? null
+                          : () {
+                              addAudioToDb();
+                              // addIndex++;
+                              // Navigator.pop(context, addIndex.toString());
+                            },
+                      child: const Text("Add",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                          )))
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
+
+class AddAudioScreenArguments {
+  final Function() backButtonCallback;
+
+  AddAudioScreenArguments({required this.backButtonCallback});
 }
