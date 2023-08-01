@@ -28,11 +28,8 @@ class AppRouter{
         }
         break;
 
-      // case audioDetailsScreen:
-        // if(args is int){
-        //   return MaterialPageRoute(builder: (_) => AudioDetailsScreen(arguments: args));
-        // }
-        break;
+      case audioDetailsScreen:
+        return MaterialPageRoute(builder: (_) => AudioDetailsScreen(arguments: args));
       default:
         return _errorRoute();
         // throw UnimplementedError('Unimplemented route: $settings.name');
