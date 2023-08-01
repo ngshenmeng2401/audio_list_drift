@@ -20,7 +20,7 @@ class _AudioListScreenState extends State<AudioListScreen> {
   List<AudioEntityData>? audioList;
   Duration duration = const Duration();
   Duration position = const Duration();
-  StreamController<List<AudioEntityData>> _audioListController =
+  final StreamController<List<AudioEntityData>> _audioListController =
       StreamController<List<AudioEntityData>>();
 
   Stream<List<AudioEntityData>> get _audioListStream =>
@@ -51,56 +51,30 @@ class _AudioListScreenState extends State<AudioListScreen> {
   }
 
   void navigateToAddAudioScreen(BuildContext context) {
-    Navigator.pushNamed(context, AppRouter.addAudioScreen, arguments: AddAudioScreenArguments(backButtonCallback: getAudioListData)).then((value) => () {
-          setState(() {
-            getAudioListData();
-          });
-        });
-    // var result = await Navigator.push(
-    //   context,
-    //   // Create the SelectionScreen in the next step.
-    //   MaterialPageRoute(
-    //       builder: (context) => const AddAudioScreen()),
-    // );
-    // if (!mounted) return;
-    // setState(() {
-    //   isPlayedList.insert(int.parse(result), false);
-    // });
-    // print("isPlayedList: $isPlayedList");
+    Navigator.pushNamed(context, AppRouter.addAudioScreen,
+            arguments:
+                AddAudioScreenArguments(backButtonCallback: getAudioListData))
+        // .then((value) => () {
+        //       setState(() {
+        //         getAudioListData();
+        //       });
+        //     })
+    ;
   }
 
   void navigateToAudioDetailsScreen(
-      int audioId,
-      String audioName,
-      String audioURL,
-      int totalLength,
-      int playPosition,
-      bool isPlaying) async {
-    Navigator.push(
-      context,
-      // Create the SelectionScreen in the next step.
-      MaterialPageRoute(
-          builder: (context) => AudioDetailsScreen(
-                audioId: audioId,
-                audioURL: audioURL,
-                audioName: audioName,
-                totalLength: totalLength,
-                playPosition: playPosition,
-                isPlaying: isPlaying,
-              )),
-    ).then((value) => () {
-          setState(() {
-            _db.getAudioList();
-          });
-        });
+    int audioId,
+  ) async {
 
-    // Navigator.pushNamed(context, AppRouter.audioDetailsScreen,
-    //         arguments: AudioDetailScreenArguments(audioId: audioId.toString()))
-    //     .then((value) => () {
-    //           setState(() {
-    //             getAudioListData();
-    //           });
-    //         });
+    Navigator.pushNamed(context, AppRouter.audioDetailsScreen,
+            arguments: AudioDetailScreenArguments(
+                audioId: audioId, backButtonCallback: getAudioListData))
+        // .then((value) => () {
+        //       setState(() {
+        //         getAudioListData();
+        //       });
+        //     })
+    ;
   }
 
   Future<void> getAudioListData() async {
@@ -119,25 +93,21 @@ class _AudioListScreenState extends State<AudioListScreen> {
   }
 
   void playAudio(
-      bool isPlayed, int audioId, String audioURL, String audioName) {
+      bool isPlayed, int audioId) {
     var entity;
 
     setState(() {
       if (isPlayed == true) {
         entity = AudioEntityCompanion(
           audioId: drift.Value(audioId),
-          audioName: drift.Value(audioName),
-          audioURL: drift.Value(audioURL),
           playPosition: const drift.Value(0),
           isPlaying: const drift.Value(false),
         );
       } else {
         entity = AudioEntityCompanion(
           audioId: drift.Value(audioId),
-          audioName: drift.Value(audioName),
-          audioURL: drift.Value(audioURL),
           playPosition: const drift.Value(0),
-          isPlaying: const drift.Value(true),
+          isPlaying: const drift.Value(false),
         );
       }
       _db.updateAudio(entity);
@@ -215,12 +185,7 @@ class _AudioListScreenState extends State<AudioListScreen> {
                         child: ListTile(
                           onTap: () {
                             navigateToAudioDetailsScreen(
-                                snapshot.data![index].audioId,
-                                snapshot.data![index].audioName!,
-                                snapshot.data![index].audioURL!,
-                                snapshot.data![index].totalLength!,
-                                snapshot.data![index].playPosition!,
-                                snapshot.data![index].isPlaying!);
+                                snapshot.data![index].audioId,);
                           },
                           onLongPress: () {
                             _showDeleteAudioDialog(
@@ -243,22 +208,18 @@ class _AudioListScreenState extends State<AudioListScreen> {
                                       Icons.play_arrow,
                                     ),
                                     onPressed: () {
-                                      // playAudio(
-                                      //     snapshot.data![index].isPlaying!,
-                                      //     snapshot.data![index].audioId,
-                                      //     snapshot.data![index].audioURL!,
-                                      //     snapshot.data![index].audioName!);
+                                      playAudio(
+                                          snapshot.data![index].isPlaying!,
+                                          snapshot.data![index].audioId,);
                                     },
                                   )
                                 : IconButton(
                                     icon: const Icon(
                                         color: Colors.white, Icons.pause),
                                     onPressed: () {
-                                      // playAudio(
-                                      //     snapshot.data![index].isPlaying!,
-                                      //     snapshot.data![index].audioId,
-                                      //     snapshot.data![index].audioURL!,
-                                      //     snapshot.data![index].audioName!);
+                                      playAudio(
+                                          snapshot.data![index].isPlaying!,
+                                          snapshot.data![index].audioId,);
                                     },
                                   ),
                           ),
