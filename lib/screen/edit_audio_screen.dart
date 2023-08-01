@@ -34,9 +34,11 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
 
   Future<void> getAudioData() async {
     _audioEntityData = await _db.getAudio(widget.audioId);
-    _musicNameController.text = _audioEntityData!.audioName;
-    _musicURLController.text = _audioEntityData!.audioURL;
-    _totalLengthController.text = _audioEntityData!.totalLength.toString();
+    if(_audioEntityData != null){
+      _musicNameController.text = _audioEntityData!.audioName!;
+      _musicURLController.text = _audioEntityData!.audioURL!;
+      _totalLengthController.text = _audioEntityData!.totalLength.toString();
+    }
   }
 
   @override
