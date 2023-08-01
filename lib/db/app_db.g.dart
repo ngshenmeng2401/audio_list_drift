@@ -23,14 +23,14 @@ class $AudioEntityTable extends AudioEntity
       const VerificationMeta('audioName');
   @override
   late final GeneratedColumn<String> audioName = GeneratedColumn<String>(
-      'audio_name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      'audio_name', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _audioURLMeta =
       const VerificationMeta('audioURL');
   @override
   late final GeneratedColumn<String> audioURL = GeneratedColumn<String>(
-      'audio_u_r_l', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+      'audio_u_r_l', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _totalLengthMeta =
       const VerificationMeta('totalLength');
   @override
@@ -43,9 +43,21 @@ class $AudioEntityTable extends AudioEntity
   late final GeneratedColumn<int> playPosition = GeneratedColumn<int>(
       'play_position', aliasedName, true,
       type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _isPlayingMeta =
+      const VerificationMeta('isPlaying');
+  @override
+  late final GeneratedColumn<bool> isPlaying =
+      GeneratedColumn<bool>('is_playing', aliasedName, true,
+          type: DriftSqlType.bool,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintsDependsOnDialect({
+            SqlDialect.sqlite: 'CHECK ("is_playing" IN (0, 1))',
+            SqlDialect.mysql: '',
+            SqlDialect.postgres: '',
+          }));
   @override
   List<GeneratedColumn> get $columns =>
-      [audioId, audioName, audioURL, totalLength, playPosition];
+      [audioId, audioName, audioURL, totalLength, playPosition, isPlaying];
   @override
   String get aliasedName => _alias ?? 'audio_entity';
   @override
@@ -62,14 +74,10 @@ class $AudioEntityTable extends AudioEntity
     if (data.containsKey('audio_name')) {
       context.handle(_audioNameMeta,
           audioName.isAcceptableOrUnknown(data['audio_name']!, _audioNameMeta));
-    } else if (isInserting) {
-      context.missing(_audioNameMeta);
     }
     if (data.containsKey('audio_u_r_l')) {
       context.handle(_audioURLMeta,
           audioURL.isAcceptableOrUnknown(data['audio_u_r_l']!, _audioURLMeta));
-    } else if (isInserting) {
-      context.missing(_audioURLMeta);
     }
     if (data.containsKey('total_length')) {
       context.handle(
@@ -83,6 +91,10 @@ class $AudioEntityTable extends AudioEntity
           playPosition.isAcceptableOrUnknown(
               data['play_position']!, _playPositionMeta));
     }
+    if (data.containsKey('is_playing')) {
+      context.handle(_isPlayingMeta,
+          isPlaying.isAcceptableOrUnknown(data['is_playing']!, _isPlayingMeta));
+    }
     return context;
   }
 
@@ -95,13 +107,15 @@ class $AudioEntityTable extends AudioEntity
       audioId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}audio_id'])!,
       audioName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}audio_name'])!,
+          .read(DriftSqlType.string, data['${effectivePrefix}audio_name']),
       audioURL: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}audio_u_r_l'])!,
+          .read(DriftSqlType.string, data['${effectivePrefix}audio_u_r_l']),
       totalLength: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}total_length']),
       playPosition: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}play_position']),
+      isPlaying: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_playing']),
     );
   }
 
@@ -113,27 +127,36 @@ class $AudioEntityTable extends AudioEntity
 
 class AudioEntityData extends DataClass implements Insertable<AudioEntityData> {
   final int audioId;
-  final String audioName;
-  final String audioURL;
+  final String? audioName;
+  final String? audioURL;
   final int? totalLength;
   final int? playPosition;
+  final bool? isPlaying;
   const AudioEntityData(
       {required this.audioId,
-      required this.audioName,
-      required this.audioURL,
+      this.audioName,
+      this.audioURL,
       this.totalLength,
-      this.playPosition});
+      this.playPosition,
+      this.isPlaying});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['audio_id'] = Variable<int>(audioId);
-    map['audio_name'] = Variable<String>(audioName);
-    map['audio_u_r_l'] = Variable<String>(audioURL);
+    if (!nullToAbsent || audioName != null) {
+      map['audio_name'] = Variable<String>(audioName);
+    }
+    if (!nullToAbsent || audioURL != null) {
+      map['audio_u_r_l'] = Variable<String>(audioURL);
+    }
     if (!nullToAbsent || totalLength != null) {
       map['total_length'] = Variable<int>(totalLength);
     }
     if (!nullToAbsent || playPosition != null) {
       map['play_position'] = Variable<int>(playPosition);
+    }
+    if (!nullToAbsent || isPlaying != null) {
+      map['is_playing'] = Variable<bool>(isPlaying);
     }
     return map;
   }
@@ -141,14 +164,21 @@ class AudioEntityData extends DataClass implements Insertable<AudioEntityData> {
   AudioEntityCompanion toCompanion(bool nullToAbsent) {
     return AudioEntityCompanion(
       audioId: Value(audioId),
-      audioName: Value(audioName),
-      audioURL: Value(audioURL),
+      audioName: audioName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(audioName),
+      audioURL: audioURL == null && nullToAbsent
+          ? const Value.absent()
+          : Value(audioURL),
       totalLength: totalLength == null && nullToAbsent
           ? const Value.absent()
           : Value(totalLength),
       playPosition: playPosition == null && nullToAbsent
           ? const Value.absent()
           : Value(playPosition),
+      isPlaying: isPlaying == null && nullToAbsent
+          ? const Value.absent()
+          : Value(isPlaying),
     );
   }
 
@@ -157,10 +187,11 @@ class AudioEntityData extends DataClass implements Insertable<AudioEntityData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AudioEntityData(
       audioId: serializer.fromJson<int>(json['audioId']),
-      audioName: serializer.fromJson<String>(json['audioName']),
-      audioURL: serializer.fromJson<String>(json['audioURL']),
+      audioName: serializer.fromJson<String?>(json['audioName']),
+      audioURL: serializer.fromJson<String?>(json['audioURL']),
       totalLength: serializer.fromJson<int?>(json['totalLength']),
       playPosition: serializer.fromJson<int?>(json['playPosition']),
+      isPlaying: serializer.fromJson<bool?>(json['isPlaying']),
     );
   }
   @override
@@ -168,26 +199,29 @@ class AudioEntityData extends DataClass implements Insertable<AudioEntityData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'audioId': serializer.toJson<int>(audioId),
-      'audioName': serializer.toJson<String>(audioName),
-      'audioURL': serializer.toJson<String>(audioURL),
+      'audioName': serializer.toJson<String?>(audioName),
+      'audioURL': serializer.toJson<String?>(audioURL),
       'totalLength': serializer.toJson<int?>(totalLength),
       'playPosition': serializer.toJson<int?>(playPosition),
+      'isPlaying': serializer.toJson<bool?>(isPlaying),
     };
   }
 
   AudioEntityData copyWith(
           {int? audioId,
-          String? audioName,
-          String? audioURL,
+          Value<String?> audioName = const Value.absent(),
+          Value<String?> audioURL = const Value.absent(),
           Value<int?> totalLength = const Value.absent(),
-          Value<int?> playPosition = const Value.absent()}) =>
+          Value<int?> playPosition = const Value.absent(),
+          Value<bool?> isPlaying = const Value.absent()}) =>
       AudioEntityData(
         audioId: audioId ?? this.audioId,
-        audioName: audioName ?? this.audioName,
-        audioURL: audioURL ?? this.audioURL,
+        audioName: audioName.present ? audioName.value : this.audioName,
+        audioURL: audioURL.present ? audioURL.value : this.audioURL,
         totalLength: totalLength.present ? totalLength.value : this.totalLength,
         playPosition:
             playPosition.present ? playPosition.value : this.playPosition,
+        isPlaying: isPlaying.present ? isPlaying.value : this.isPlaying,
       );
   @override
   String toString() {
@@ -196,14 +230,15 @@ class AudioEntityData extends DataClass implements Insertable<AudioEntityData> {
           ..write('audioName: $audioName, ')
           ..write('audioURL: $audioURL, ')
           ..write('totalLength: $totalLength, ')
-          ..write('playPosition: $playPosition')
+          ..write('playPosition: $playPosition, ')
+          ..write('isPlaying: $isPlaying')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(audioId, audioName, audioURL, totalLength, playPosition);
+  int get hashCode => Object.hash(
+      audioId, audioName, audioURL, totalLength, playPosition, isPlaying);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -212,36 +247,40 @@ class AudioEntityData extends DataClass implements Insertable<AudioEntityData> {
           other.audioName == this.audioName &&
           other.audioURL == this.audioURL &&
           other.totalLength == this.totalLength &&
-          other.playPosition == this.playPosition);
+          other.playPosition == this.playPosition &&
+          other.isPlaying == this.isPlaying);
 }
 
 class AudioEntityCompanion extends UpdateCompanion<AudioEntityData> {
   final Value<int> audioId;
-  final Value<String> audioName;
-  final Value<String> audioURL;
+  final Value<String?> audioName;
+  final Value<String?> audioURL;
   final Value<int?> totalLength;
   final Value<int?> playPosition;
+  final Value<bool?> isPlaying;
   const AudioEntityCompanion({
     this.audioId = const Value.absent(),
     this.audioName = const Value.absent(),
     this.audioURL = const Value.absent(),
     this.totalLength = const Value.absent(),
     this.playPosition = const Value.absent(),
+    this.isPlaying = const Value.absent(),
   });
   AudioEntityCompanion.insert({
     this.audioId = const Value.absent(),
-    required String audioName,
-    required String audioURL,
+    this.audioName = const Value.absent(),
+    this.audioURL = const Value.absent(),
     this.totalLength = const Value.absent(),
     this.playPosition = const Value.absent(),
-  })  : audioName = Value(audioName),
-        audioURL = Value(audioURL);
+    this.isPlaying = const Value.absent(),
+  });
   static Insertable<AudioEntityData> custom({
     Expression<int>? audioId,
     Expression<String>? audioName,
     Expression<String>? audioURL,
     Expression<int>? totalLength,
     Expression<int>? playPosition,
+    Expression<bool>? isPlaying,
   }) {
     return RawValuesInsertable({
       if (audioId != null) 'audio_id': audioId,
@@ -249,21 +288,24 @@ class AudioEntityCompanion extends UpdateCompanion<AudioEntityData> {
       if (audioURL != null) 'audio_u_r_l': audioURL,
       if (totalLength != null) 'total_length': totalLength,
       if (playPosition != null) 'play_position': playPosition,
+      if (isPlaying != null) 'is_playing': isPlaying,
     });
   }
 
   AudioEntityCompanion copyWith(
       {Value<int>? audioId,
-      Value<String>? audioName,
-      Value<String>? audioURL,
+      Value<String?>? audioName,
+      Value<String?>? audioURL,
       Value<int?>? totalLength,
-      Value<int?>? playPosition}) {
+      Value<int?>? playPosition,
+      Value<bool?>? isPlaying}) {
     return AudioEntityCompanion(
       audioId: audioId ?? this.audioId,
       audioName: audioName ?? this.audioName,
       audioURL: audioURL ?? this.audioURL,
       totalLength: totalLength ?? this.totalLength,
       playPosition: playPosition ?? this.playPosition,
+      isPlaying: isPlaying ?? this.isPlaying,
     );
   }
 
@@ -285,6 +327,9 @@ class AudioEntityCompanion extends UpdateCompanion<AudioEntityData> {
     if (playPosition.present) {
       map['play_position'] = Variable<int>(playPosition.value);
     }
+    if (isPlaying.present) {
+      map['is_playing'] = Variable<bool>(isPlaying.value);
+    }
     return map;
   }
 
@@ -295,7 +340,8 @@ class AudioEntityCompanion extends UpdateCompanion<AudioEntityData> {
           ..write('audioName: $audioName, ')
           ..write('audioURL: $audioURL, ')
           ..write('totalLength: $totalLength, ')
-          ..write('playPosition: $playPosition')
+          ..write('playPosition: $playPosition, ')
+          ..write('isPlaying: $isPlaying')
           ..write(')'))
         .toString();
   }
