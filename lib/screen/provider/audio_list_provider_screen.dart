@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:audio_player_list_with_drift/route/app_route.dart';
-import 'package:audio_player_list_with_drift/screen/add_audio_screen.dart';
-import 'package:audio_player_list_with_drift/screen/audio_details_screen.dart';
+import 'package:audio_player_list_with_drift/screen/provider/add_audio_provider_screen.dart';
+import 'package:audio_player_list_with_drift/screen/provider/audio_details_provider_screen.dart';
+import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter_fimber/flutter_fimber.dart';
@@ -49,9 +50,9 @@ class _AudioListWithProviderScreenState extends State<AudioListWithProviderScree
   }
 
   void navigateToAddAudioScreen(BuildContext context) {
-    Navigator.pushNamed(context, AppRouter.addAudioScreen,
+    Navigator.pushNamed(context, AppRouter.addAudioWithProviderScreen,
             arguments:
-                AddAudioScreenArguments(backButtonCallback: getAudioListData))
+                AddAudioWithProviderScreenArguments(backButtonCallback: getAudioListData))
     ;
   }
 
@@ -59,8 +60,8 @@ class _AudioListWithProviderScreenState extends State<AudioListWithProviderScree
     int audioId,
   ) async {
 
-    Navigator.pushNamed(context, AppRouter.audioDetailsScreen,
-            arguments: AudioDetailScreenArguments(
+    Navigator.pushNamed(context, AppRouter.audioDetailsWithProviderScreen,
+            arguments: AudioDetailWithProviderScreenArguments(
                 audioId: audioId, backButtonCallback: getAudioListData))
     ;
   }
