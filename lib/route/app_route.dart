@@ -27,10 +27,7 @@ class AppRouter{
         return MaterialPageRoute(builder: (_) => AddAudioScreen(arguments: args,));
 
       case editAudioScreen:
-        if(args is int){
-          return MaterialPageRoute(builder: (_) => EditAudioScreen(audioId: args));
-        }
-        break;
+        return MaterialPageRoute(builder: (_) => EditAudioScreen(arguments: args));
 
       case audioDetailsScreen:
         return MaterialPageRoute(builder: (_) => AudioDetailsScreen(arguments: args));
