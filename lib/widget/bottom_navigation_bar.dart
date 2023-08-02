@@ -1,4 +1,5 @@
-import 'package:audio_player_list_with_drift/screen/audio_list_screen.dart';
+import 'package:audio_player_list_with_drift/screen/get_it/audio_list_get_it_screen.dart';
+import 'package:audio_player_list_with_drift/screen/provider/audio_list_provider_screen.dart';
 import 'package:flutter/material.dart';
 
 class BottomNavigationBarWidget extends StatefulWidget {
@@ -19,7 +20,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
     super.initState();
     _tabs = [
       const AudioListWithProviderScreen(),
-      const AudioListWithProviderScreen(),
+      const AudioListWithGetItScreen(),
     ];
   }
 
@@ -46,7 +47,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
           ),
           BottomNavigationBarItem(
               icon: Icon(Icons.home, size: 18,),
-              label: "Stream Provider",
+              label: "Stream Get It",
               activeIcon: Icon(Icons.home, size: 26,)
           ),
           // BottomNavigationBarItem(
