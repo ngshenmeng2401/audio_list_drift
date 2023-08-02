@@ -1,14 +1,22 @@
+import 'dart:async';
+
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:flutter_fimber/flutter_fimber.dart';
 import 'package:provider/provider.dart';
 
 enum ClearTextFieldType { musicName, musicURL, totalLength }
 
 class EditAudioScreen extends StatefulWidget {
-  final int audioId;
+  final EditAudioScreenArguments arguments;
 
-  const EditAudioScreen({super.key, required this.audioId});
+  const EditAudioScreen({
+    Key? key,
+    required Object? arguments,
+  })  : assert(arguments != null && arguments is EditAudioScreenArguments),
+        this.arguments = arguments as EditAudioScreenArguments,
+        super(key: key);
 
   @override
   State<EditAudioScreen> createState() => _EditAudioScreenState();
@@ -23,6 +31,10 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
       isMusicURLEmpty = false,
       isTotalLengthEmpty = false;
   AudioEntityData? _audioEntityData;
+  // final StreamController<AudioEntityData> _audioController =
+  // StreamController<AudioEntityData>();
+  //
+  // Stream<AudioEntityData> get _audioStream => _audioController.stream;
 
   @override
   void initState() {
@@ -32,12 +44,18 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
   }
 
   Future<void> getAudioData() async {
-    _audioEntityData = await Provider.of<AppDb>(context, listen: false).getAudio(widget.audioId);
-    if(_audioEntityData != null){
-      _musicNameController.text = _audioEntityData!.audioName!;
-      _musicURLController.text = _audioEntityData!.audioURL!;
-      _totalLengthController.text = _audioEntityData!.totalLength.toString();
+    try{
+      _audioEntityData = await Provider.of<AppDb>(context, listen: false).getAudio(widget.arguments.audioId);
+      if(_audioEntityData != null){
+        // _audioController.sink.add(_audioEntityData!);
+        _musicNameController.text = _audioEntityData!.audioName!;
+        _musicURLController.text = _audioEntityData!.audioURL!;
+        _totalLengthController.text = _audioEntityData!.totalLength.toString();
+      }
+    }catch (ex){
+      Fimber.e('d;;exception', ex: ex);
     }
+
   }
 
   @override
@@ -123,7 +141,7 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
 
   void editAudioToDb() {
     final entity = AudioEntityCompanion(
-      audioId: drift.Value(widget.audioId),
+      audioId: drift.Value(widget.arguments.audioId),
       audioName: drift.Value(_musicNameController.text),
       audioURL: drift.Value(_musicURLController.text),
       totalLength: drift.Value(int.parse(_totalLengthController.text)),
@@ -154,105 +172,121 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
     ));
   }
 
+  Future<bool> _onWillPop() async {
+    widget.arguments.backButtonCallback();
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;
     double screenWidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Edit Audio"),
-      ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-            child: Column(
-              children: [
-                TextField(
-                  enableInteractiveSelection: true,
-                  onChanged: (value) => checkTextField(),
-                  keyboardType: TextInputType.name,
-                  controller: _musicNameController,
-                  decoration: InputDecoration(
-                      labelText: "Music Name",
-                      suffixIcon: isMusicNameEmpty
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Edit Audio"),
+        ),
+        body: SingleChildScrollView(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+              child: Column(
+                children: [
+                  TextField(
+                    enableInteractiveSelection: true,
+                    onChanged: (value) => checkTextField(),
+                    keyboardType: TextInputType.name,
+                    controller: _musicNameController,
+                    decoration: InputDecoration(
+                        labelText: "Music Name",
+                        suffixIcon: isMusicNameEmpty
+                            ? null
+                            : IconButton(
+                                onPressed: () {
+                                  clearTextField(ClearTextFieldType.musicName);
+                                },
+                                icon: const Icon(Icons.clear_rounded))),
+                  ),
+                  const SizedBox(height: 15),
+                  TextField(
+                    enableInteractiveSelection: true,
+                    onChanged: (value) => checkTextField(),
+                    keyboardType: TextInputType.name,
+                    controller: _musicURLController,
+                    decoration: InputDecoration(
+                        labelText: "Music URL",
+                        suffixIcon: isMusicURLEmpty
+                            ? null
+                            : IconButton(
+                                onPressed: () {
+                                  clearTextField(ClearTextFieldType.musicURL);
+                                },
+                                icon: const Icon(Icons.clear_rounded))),
+                  ),
+                  const SizedBox(height: 15),
+                  TextField(
+                    enableInteractiveSelection: true,
+                    onChanged: (value) => checkTextField(),
+                    keyboardType: TextInputType.number,
+                    controller: _totalLengthController,
+                    decoration: InputDecoration(
+                        labelText: "Total Length",
+                        suffixIcon: isTotalLengthEmpty
+                            ? null
+                            : IconButton(
+                                onPressed: () {
+                                  clearTextField(ClearTextFieldType.totalLength);
+                                },
+                                icon: const Icon(Icons.clear_rounded))),
+                  ),
+                  const SizedBox(height: 15),
+                  MaterialButton(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      minWidth: screenWidth,
+                      height: screenHeight / 18,
+                      color: Colors.blue,
+                      onPressed: isEmpty
                           ? null
-                          : IconButton(
-                              onPressed: () {
-                                clearTextField(ClearTextFieldType.musicName);
-                              },
-                              icon: const Icon(Icons.clear_rounded))),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  enableInteractiveSelection: true,
-                  onChanged: (value) => checkTextField(),
-                  keyboardType: TextInputType.name,
-                  controller: _musicURLController,
-                  decoration: InputDecoration(
-                      labelText: "Music URL",
-                      suffixIcon: isMusicURLEmpty
-                          ? null
-                          : IconButton(
-                              onPressed: () {
-                                clearTextField(ClearTextFieldType.musicURL);
-                              },
-                              icon: const Icon(Icons.clear_rounded))),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  enableInteractiveSelection: true,
-                  onChanged: (value) => checkTextField(),
-                  keyboardType: TextInputType.number,
-                  controller: _totalLengthController,
-                  decoration: InputDecoration(
-                      labelText: "Total Length",
-                      suffixIcon: isTotalLengthEmpty
-                          ? null
-                          : IconButton(
-                              onPressed: () {
-                                clearTextField(ClearTextFieldType.totalLength);
-                              },
-                              icon: const Icon(Icons.clear_rounded))),
-                ),
-                const SizedBox(height: 15),
-                MaterialButton(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    minWidth: screenWidth,
-                    height: screenHeight / 18,
-                    color: Colors.blue,
-                    onPressed: isEmpty
-                        ? null
-                        : () {
-                            editAudioToDb();
-                          },
-                    child: const Text("Edit",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                        ))),
-                const SizedBox(height: 15),
-                MaterialButton(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    minWidth: screenWidth,
-                    height: screenHeight / 18,
-                    color: Colors.blue,
-                    onPressed: null,
-                    child: const Text("Delete",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                        ))),
-              ],
+                          : () {
+                              editAudioToDb();
+                            },
+                      child: const Text("Edit",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                          ))),
+                  const SizedBox(height: 15),
+                  MaterialButton(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      minWidth: screenWidth,
+                      height: screenHeight / 18,
+                      color: Colors.blue,
+                      onPressed: null,
+                      child: const Text("Delete",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                          ))),
+                ],
+              ),
             ),
           ),
         ),
       ),
     );
   }
+}
+
+class EditAudioScreenArguments {
+  int audioId;
+  final Function() backButtonCallback;
+
+  EditAudioScreenArguments(
+      {required this.audioId, required this.backButtonCallback});
 }
