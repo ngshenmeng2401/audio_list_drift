@@ -1,6 +1,7 @@
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:provider/provider.dart';
 
 enum ClearTextFieldType { musicName, musicURL, totalLength }
 
