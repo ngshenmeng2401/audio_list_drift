@@ -6,6 +6,7 @@ import 'package:audio_player_list_with_drift/screen/add_audio_screen.dart';
 import 'package:audio_player_list_with_drift/screen/audio_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:flutter_fimber/flutter_fimber.dart';
 import 'package:provider/provider.dart';
 
 class AudioListWithProviderScreen extends StatefulWidget {
@@ -79,8 +80,8 @@ class _AudioListWithProviderScreenState extends State<AudioListWithProviderScree
       }
 
       print("Audio List after get data: $audioList");
-    }catch (e){
-      print(e);
+    }catch (ex){
+      Fimber.e('d;;exception', ex: ex);
     }
 
   }
@@ -147,6 +148,8 @@ class _AudioListWithProviderScreenState extends State<AudioListWithProviderScree
 
   void _deleteAudio(int audioId) {
     Provider.of<AppDb>(context, listen: false).deleteAudio(audioId);
+
+    getAudioListData();
   }
 
   @override
@@ -166,7 +169,7 @@ class _AudioListWithProviderScreenState extends State<AudioListWithProviderScree
         ],
       ),
       body: StreamBuilder<List<AudioEntityData>>(
-          stream: Provider.of<AppDb>(context).getAudioList().asStream(),
+          stream: _audioListStream,
           builder: (context, AsyncSnapshot<List<AudioEntityData>> snapshot) {
             if (snapshot.hasData) {
               return ListView.builder(
