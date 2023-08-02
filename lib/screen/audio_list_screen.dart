@@ -8,14 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:provider/provider.dart';
 
-class AudioListScreen extends StatefulWidget {
-  const AudioListScreen({super.key});
+class AudioListWithProviderScreen extends StatefulWidget {
+  const AudioListWithProviderScreen({super.key});
 
   @override
-  State<AudioListScreen> createState() => _AudioListScreenState();
+  State<AudioListWithProviderScreen> createState() => _AudioListWithProviderScreenState();
 }
 
-class _AudioListScreenState extends State<AudioListScreen> {
+class _AudioListWithProviderScreenState extends State<AudioListWithProviderScreen> {
   List<bool> isPlayedList = [];
   List<AudioEntityData>? audioList;
   Duration duration = const Duration();
