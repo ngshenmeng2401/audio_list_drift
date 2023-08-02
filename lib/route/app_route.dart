@@ -2,11 +2,13 @@ import 'package:audio_player_list_with_drift/screen/add_audio_screen.dart';
 import 'package:audio_player_list_with_drift/screen/audio_details_screen.dart';
 import 'package:audio_player_list_with_drift/screen/edit_audio_screen.dart';
 import 'package:audio_player_list_with_drift/screen/audio_list_screen.dart';
+import 'package:audio_player_list_with_drift/widget/bottom_navigation_bar.dart';
 import 'package:flutter/material.dart';
 
 class AppRouter{
 
-  static const String audioPlayerListScreen = '/';
+  static const String bottomNavigationBarWidget = '/';
+  static const String audioPlayerListScreen = '/audioPlayerListScreen';
   static const String addAudioScreen = '/addAudioScreen';
   static const String audioDetailsScreen = '/audioDetailsScreen';
   static const String editAudioScreen = '/editAudioScreen';
@@ -16,8 +18,10 @@ class AppRouter{
     final args = settings.arguments;
 
     switch (settings.name){
+      case bottomNavigationBarWidget:
+        return MaterialPageRoute(builder: (_) => const BottomNavigationBarWidget());
       case audioPlayerListScreen:
-        return MaterialPageRoute(builder: (_) => const AudioListScreen());
+        return MaterialPageRoute(builder: (_) => const AudioListWithProviderScreen());
 
       case addAudioScreen:
         return MaterialPageRoute(builder: (_) => AddAudioScreen(arguments: args,));
