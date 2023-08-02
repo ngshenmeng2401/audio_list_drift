@@ -2,28 +2,28 @@ import 'dart:async';
 
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:audio_player_list_with_drift/route/app_route.dart';
-import 'package:audio_player_list_with_drift/screen/edit_audio_screen.dart';
+import 'package:audio_player_list_with_drift/screen/provider/edit_audio_provider_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter_fimber/flutter_fimber.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 
-class AudioDetailsScreen extends StatefulWidget {
-  final AudioDetailScreenArguments arguments;
+class AudioDetailsWithGetItScreen extends StatefulWidget {
+  final AudioDetailWithGetItScreenArguments arguments;
 
-  const AudioDetailsScreen({
+  const AudioDetailsWithGetItScreen({
     Key? key,
     required Object? arguments,
-  })  : assert(arguments != null && arguments is AudioDetailScreenArguments),
-        this.arguments = arguments as AudioDetailScreenArguments,
+  })  : assert(arguments != null && arguments is AudioDetailWithGetItScreenArguments),
+        this.arguments = arguments as AudioDetailWithGetItScreenArguments,
         super(key: key);
 
   @override
-  State<AudioDetailsScreen> createState() => _AudioDetailsScreenState();
+  State<AudioDetailsWithGetItScreen> createState() => _AudioDetailsWithGetItScreenState();
 }
 
-class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
+class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScreen> {
   AudioEntityData? _audioEntityData;
   final audioPlayer = AudioPlayer();
   Duration duration = const Duration();
@@ -82,8 +82,8 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
   }
 
   void navigateToEditAudioScreen(int audioId) async {
-    await Navigator.pushNamed(context, AppRouter.editAudioScreen,
-            arguments: EditAudioScreenArguments(
+    await Navigator.pushNamed(context, AppRouter.editAudioWithGetItScreen,
+            arguments: EditAudioWithProviderScreenArguments(
                 audioId: audioId, backButtonCallback: getAudioData));
   }
 
@@ -316,10 +316,10 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
   }
 }
 
-class AudioDetailScreenArguments {
+class AudioDetailWithGetItScreenArguments {
   int audioId;
   final Function() backButtonCallback;
 
-  AudioDetailScreenArguments(
+  AudioDetailWithGetItScreenArguments(
       {required this.audioId, required this.backButtonCallback});
 }

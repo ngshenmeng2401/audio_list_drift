@@ -3,21 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:provider/provider.dart';
 
-class AddAudioScreen extends StatefulWidget {
-  final AddAudioScreenArguments arguments;
+class AddAudioWithGetItScreen extends StatefulWidget {
+  final AddAudioWithGetItScreenArguments arguments;
 
-  const AddAudioScreen({
+  const AddAudioWithGetItScreen({
     Key? key,
     required Object? arguments,
-  })  : assert(arguments != null && arguments is AddAudioScreenArguments),
-        this.arguments = arguments as AddAudioScreenArguments,
+  })  : assert(arguments != null && arguments is AddAudioWithGetItScreenArguments),
+        this.arguments = arguments as AddAudioWithGetItScreenArguments,
         super(key: key);
 
   @override
-  State<AddAudioScreen> createState() => _AddAudioScreenState();
+  State<AddAudioWithGetItScreen> createState() => _AddAudioWithGetItScreenState();
 }
 
-class _AddAudioScreenState extends State<AddAudioScreen> {
+class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
   final TextEditingController _musicNameController = TextEditingController();
   final TextEditingController _musicURLController = TextEditingController();
   final TextEditingController _totalLengthController = TextEditingController();
@@ -170,8 +170,8 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
   }
 }
 
-class AddAudioScreenArguments {
+class AddAudioWithGetItScreenArguments {
   final Function() backButtonCallback;
 
-  AddAudioScreenArguments({required this.backButtonCallback});
+  AddAudioWithGetItScreenArguments({required this.backButtonCallback});
 }

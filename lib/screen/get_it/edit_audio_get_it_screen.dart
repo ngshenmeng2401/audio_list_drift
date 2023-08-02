@@ -8,21 +8,21 @@ import 'package:provider/provider.dart';
 
 enum ClearTextFieldType { musicName, musicURL, totalLength }
 
-class EditAudioScreen extends StatefulWidget {
-  final EditAudioScreenArguments arguments;
+class EditAudioWithGetItScreen extends StatefulWidget {
+  final EditAudioWithGetItScreenArguments arguments;
 
-  const EditAudioScreen({
+  const EditAudioWithGetItScreen({
     Key? key,
     required Object? arguments,
-  })  : assert(arguments != null && arguments is EditAudioScreenArguments),
-        this.arguments = arguments as EditAudioScreenArguments,
+  })  : assert(arguments != null && arguments is EditAudioWithGetItScreenArguments),
+        this.arguments = arguments as EditAudioWithGetItScreenArguments,
         super(key: key);
 
   @override
-  State<EditAudioScreen> createState() => _EditAudioScreenState();
+  State<EditAudioWithGetItScreen> createState() => _EditAudioWithGetItScreenState();
 }
 
-class _EditAudioScreenState extends State<EditAudioScreen> {
+class _EditAudioWithGetItScreenState extends State<EditAudioWithGetItScreen> {
   final TextEditingController _musicNameController = TextEditingController();
   final TextEditingController _musicURLController = TextEditingController();
   final TextEditingController _totalLengthController = TextEditingController();
@@ -283,10 +283,10 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
   }
 }
 
-class EditAudioScreenArguments {
+class EditAudioWithGetItScreenArguments {
   int audioId;
   final Function() backButtonCallback;
 
-  EditAudioScreenArguments(
+  EditAudioWithGetItScreenArguments(
       {required this.audioId, required this.backButtonCallback});
 }
