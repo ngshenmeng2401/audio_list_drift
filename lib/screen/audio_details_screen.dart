@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:audio_player_list_with_drift/route/app_route.dart';
+import 'package:audio_player_list_with_drift/screen/edit_audio_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:flutter_fimber/flutter_fimber.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:provider/provider.dart';
 
@@ -28,11 +30,9 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
   Duration position = const Duration();
   bool? isPlaying = false;
   final StreamController<AudioEntityData> _audioController =
-  StreamController<AudioEntityData>();
+      StreamController<AudioEntityData>();
 
-  Stream<AudioEntityData> get _audioStream =>
-      _audioController.stream;
-
+  Stream<AudioEntityData> get _audioStream => _audioController.stream;
 
   @override
   void initState() {
@@ -51,19 +51,24 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
   }
 
   Future<void> getAudioData() async {
-    try{
-      _audioEntityData = await Provider.of<AppDb>(context, listen: false).getAudio(widget.arguments.audioId);
+    try {
+      _audioEntityData = await Provider.of<AppDb>(context, listen: false)
+          .getAudio(widget.arguments.audioId);
       setState(() {
         _audioEntityData = _audioEntityData;
       });
-      if (_audioEntityData != null && _audioEntityData!.audioURL != null) {
-        await audioPlayer.setUrl(_audioEntityData!.audioURL!);
+
+      if (_audioEntityData != null) {
+        _audioController.sink.add(_audioEntityData!);
+        if (_audioEntityData!.audioURL != null) {
+          await audioPlayer.setUrl(_audioEntityData!.audioURL!);
+        }
       }
-      if(audioPlayer.duration != null){
+      if (audioPlayer.duration != null) {
         duration = audioPlayer.duration!;
       }
-    }catch (e){
-      print(e);
+    } catch (ex) {
+      Fimber.e('d;;exception', ex: ex);
     }
 
     print("duration $duration");
@@ -77,45 +82,38 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
   }
 
   void navigateToEditAudioScreen(int audioId) async {
-    await Navigator.pushNamed(context, AppRouter.editAudioScreen, arguments: audioId)
-        .then((value) => () {
-              setState(() {
-                getAudioData();
-              });
-            });
-    print("d;;test message");
+    await Navigator.pushNamed(context, AppRouter.editAudioScreen,
+            arguments: EditAudioScreenArguments(
+                audioId: audioId, backButtonCallback: getAudioData));
   }
 
   void playAudio(bool isPlay, int playedPosition) {
-
     var entity;
     print("isPlaying before action: $isPlaying");
     setState(() {
       if (isPlay) {
         audioPlayer.pause();
         isPlaying = false;
-        entity = AudioEntityCompanion(
-          audioId: drift.Value(widget.arguments.audioId),
-          playPosition: drift.Value(position.inSeconds.toInt()),
-          isPlaying: const drift.Value(false),
-        );
-
+        // entity = AudioEntityCompanion(
+        //   audioId: drift.Value(widget.arguments.audioId),
+        //   playPosition: drift.Value(position.inSeconds.toInt()),
+        //   isPlaying: const drift.Value(false),
+        // );
       } else {
-        if(playedPosition != 0){
+        if (playedPosition != 0) {
           audioPlayer.seek(Duration(seconds: playedPosition));
         }
         audioPlayer.play();
         isPlaying = true;
-        entity = AudioEntityCompanion(
-          audioId: drift.Value(widget.arguments.audioId),
-          // playPosition: const drift.Value(0),
-          isPlaying: const drift.Value(true),
-        );
-
+        // entity = AudioEntityCompanion(
+        //   audioId: drift.Value(widget.arguments.audioId),
+        //   // playPosition: const drift.Value(0),
+        //   isPlaying: const drift.Value(true),
+        // );
       }
     });
     print("isPlaying after action: $isPlaying");
-    Provider.of<AppDb>(context, listen: false).updateAudio(entity);
+    // Provider.of<AppDb>(context, listen: false).updateAudio(entity);
     // setState(() {
     //   getAudioData();
     // });
@@ -177,7 +175,6 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
   }
 
   Widget _renderAudioSlider(int playedPosition, int totalLength) {
-
     print("Position: $position");
     return Slider(
         min: 0.0,
@@ -243,62 +240,76 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
         ),
         body: SingleChildScrollView(
           child: Center(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
-              child:
-              _audioEntityData != null ?
-                    Column(
-                      children: [
-                        Text(
-                          _audioEntityData!.audioName!,
-                          style: const TextStyle(fontSize: 24),
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        _renderAudioSlider(_audioEntityData!.playPosition!, _audioEntityData!.totalLength!),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        _renderPlayDuration(_audioEntityData!.playPosition!,
-                            _audioEntityData!.totalLength!),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Container(
-                          height: screenHeight * 0.2,
-                          width: screenWidth * 0.2,
-                          decoration: const BoxDecoration(
-                              color: Colors.blue, shape: BoxShape.circle),
-                          child: !isPlaying!
-                              ? IconButton(
-                                  icon: const Icon(
-                                    Icons.play_arrow,
-                                    color: Colors.white,
-                                    size: 50,
-                                  ),
-                                  onPressed: () {
-                                    playAudio(isPlaying!,
-                                        _audioEntityData!.playPosition!);
-                                  },
-                                )
-                              : IconButton(
-                                  icon: const Icon(
-                                    Icons.pause,
-                                    color: Colors.white,
-                                    size: 50,
-                                  ),
-                                  onPressed: () {
-                                    playAudio(isPlaying!,
-                                        _audioEntityData!.playPosition!);
-                                  },
-                                ),
-                        ),
-                      ],
-                    )
-                  : Container(),
-            )
-          ),
+              child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+                  child: StreamBuilder(
+                      stream: _audioStream,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return Column(
+                            children: [
+                              Text(
+                                snapshot.data!.audioName!,
+                                style: const TextStyle(fontSize: 24),
+                              ),
+                              const SizedBox(
+                                height: 20,
+                              ),
+                              _renderAudioSlider(
+                                  snapshot.data!.playPosition!,
+                                  snapshot.data!.totalLength!),
+                              const SizedBox(
+                                height: 20,
+                              ),
+                              _renderPlayDuration(
+                                  snapshot.data!.playPosition!,
+                                  snapshot.data!.totalLength!),
+                              const SizedBox(
+                                height: 20,
+                              ),
+                              Container(
+                                height: screenHeight * 0.2,
+                                width: screenWidth * 0.2,
+                                decoration: const BoxDecoration(
+                                    color: Colors.blue, shape: BoxShape.circle),
+                                child: !isPlaying!
+                                    ? IconButton(
+                                        icon: const Icon(
+                                          Icons.play_arrow,
+                                          color: Colors.white,
+                                          size: 50,
+                                        ),
+                                        onPressed: () {
+                                          playAudio(isPlaying!,
+                                              snapshot.data!.playPosition!);
+                                        },
+                                      )
+                                    : IconButton(
+                                        icon: const Icon(
+                                          Icons.pause,
+                                          color: Colors.white,
+                                          size: 50,
+                                        ),
+                                        onPressed: () {
+                                          playAudio(isPlaying!,
+                                              snapshot.data!.playPosition!);
+                                        },
+                                      ),
+                              ),
+                            ],
+                          );
+                        }
+                        if (snapshot.hasError) {
+                          return const Text("Error");
+                        }
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        }
+                        return const Text("No data");
+                      })
+                  // : Container(),
+                  )),
         ),
       ),
     );
@@ -309,5 +320,6 @@ class AudioDetailScreenArguments {
   int audioId;
   final Function() backButtonCallback;
 
-  AudioDetailScreenArguments({required this.audioId, required this.backButtonCallback});
+  AudioDetailScreenArguments(
+      {required this.audioId, required this.backButtonCallback});
 }
