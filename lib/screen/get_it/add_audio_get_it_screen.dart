@@ -1,7 +1,7 @@
 import 'package:audio_player_list_with_drift/db/app_db.dart';
+import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
-import 'package:provider/provider.dart';
 
 class AddAudioWithGetItScreen extends StatefulWidget {
   final AddAudioWithGetItScreenArguments arguments;
@@ -67,7 +67,7 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
       isPlaying: const drift.Value(false),
     );
 
-    Provider.of<AppDb>(context, listen: false).insertAudio(entity).then((value) => showDialog<void>(
+    getIt.get<AppDb>().insertAudio(entity).then((value) => showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(

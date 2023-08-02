@@ -2,13 +2,12 @@ import 'dart:async';
 
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:audio_player_list_with_drift/route/app_route.dart';
-import 'package:audio_player_list_with_drift/screen/provider/add_audio_provider_screen.dart';
-import 'package:audio_player_list_with_drift/screen/provider/audio_details_provider_screen.dart';
+import 'package:audio_player_list_with_drift/screen/get_it/add_audio_get_it_screen.dart';
+import 'package:audio_player_list_with_drift/screen/get_it/audio_details_get_it_screen.dart';
 import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter_fimber/flutter_fimber.dart';
-import 'package:provider/provider.dart';
 
 class AudioListWithGetItScreen extends StatefulWidget {
   const AudioListWithGetItScreen({super.key});
@@ -52,7 +51,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
   void navigateToAddAudioScreen(BuildContext context) {
     Navigator.pushNamed(context, AppRouter.addAudioWithGetItScreen,
             arguments:
-                AddAudioWithProviderScreenArguments(backButtonCallback: getAudioListData))
+                AddAudioWithGetItScreenArguments(backButtonCallback: getAudioListData))
     ;
   }
 
@@ -61,7 +60,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
   ) async {
 
     Navigator.pushNamed(context, AppRouter.audioDetailsWithGetItScreen,
-            arguments: AudioDetailWithProviderScreenArguments(
+            arguments: AudioDetailWithGetItScreenArguments(
                 audioId: audioId, backButtonCallback: getAudioListData))
     ;
   }
@@ -74,7 +73,6 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
       if (audioList != null) {
         audioList!.clear();
       }
-      audioList = await Provider.of<AppDb>(context, listen: false).getAudioList();
       audioList = await getIt.get<AppDb>().getAudioList();
 
       if (audioList != null) {
@@ -106,7 +104,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
           isPlaying: const drift.Value(false),
         );
       }
-      Provider.of<AppDb>(context, listen: false).updateAudio(entity);
+      getIt.get<AppDb>().updateAudio(entity);
     });
   }
 
@@ -138,7 +136,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                 _deleteAudio(audioId);
                 Navigator.of(context).pop();
                 setState(() {
-                  Provider.of<AppDb>(context, listen: false).getAudioList();
+                  getIt.get<AppDb>().getAudioList();
                 });
               },
             ),
@@ -149,7 +147,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
   }
 
   void _deleteAudio(int audioId) {
-    Provider.of<AppDb>(context, listen: false).deleteAudio(audioId);
+    getIt.get<AppDb>().deleteAudio(audioId);
 
     getAudioListData();
   }

@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:audio_player_list_with_drift/route/app_route.dart';
-import 'package:audio_player_list_with_drift/screen/provider/edit_audio_provider_screen.dart';
+import 'package:audio_player_list_with_drift/screen/get_it/edit_audio_get_it_screen.dart';
+import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter_fimber/flutter_fimber.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:provider/provider.dart';
 
 class AudioDetailsWithGetItScreen extends StatefulWidget {
   final AudioDetailWithGetItScreenArguments arguments;
@@ -52,7 +52,7 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
 
   Future<void> getAudioData() async {
     try {
-      _audioEntityData = await Provider.of<AppDb>(context, listen: false)
+      _audioEntityData = await getIt.get<AppDb>()
           .getAudio(widget.arguments.audioId);
       setState(() {
         _audioEntityData = _audioEntityData;
@@ -83,7 +83,7 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
 
   void navigateToEditAudioScreen(int audioId) async {
     await Navigator.pushNamed(context, AppRouter.editAudioWithGetItScreen,
-            arguments: EditAudioWithProviderScreenArguments(
+            arguments: EditAudioWithGetItScreenArguments(
                 audioId: audioId, backButtonCallback: getAudioData));
   }
 
@@ -171,7 +171,7 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
   }
 
   void deleteAudio() {
-    Provider.of<AppDb>(context).deleteAudio(widget.arguments.audioId);
+    getIt.get<AppDb>().deleteAudio(widget.arguments.audioId);
   }
 
   Widget _renderAudioSlider(int playedPosition, int totalLength) {

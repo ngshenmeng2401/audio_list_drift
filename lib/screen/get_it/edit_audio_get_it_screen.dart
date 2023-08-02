@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:audio_player_list_with_drift/db/app_db.dart';
+import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter_fimber/flutter_fimber.dart';
-import 'package:provider/provider.dart';
 
 enum ClearTextFieldType { musicName, musicURL, totalLength }
 
@@ -45,7 +45,7 @@ class _EditAudioWithGetItScreenState extends State<EditAudioWithGetItScreen> {
 
   Future<void> getAudioData() async {
     try{
-      _audioEntityData = await Provider.of<AppDb>(context, listen: false).getAudio(widget.arguments.audioId);
+      _audioEntityData = await getIt.get<AppDb>().getAudio(widget.arguments.audioId);
       if(_audioEntityData != null){
         // _audioController.sink.add(_audioEntityData!);
         _musicNameController.text = _audioEntityData!.audioName!;
@@ -148,7 +148,7 @@ class _EditAudioWithGetItScreenState extends State<EditAudioWithGetItScreen> {
       playPosition: const drift.Value(0),
     );
 
-    Provider.of<AppDb>(context, listen: false).updateAudio(entity).then((value) => showDialog<void>(
+    getIt.get<AppDb>().updateAudio(entity).then((value) => showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
