@@ -21,19 +21,17 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
       isMusicNameEmpty = false,
       isMusicURLEmpty = false,
       isTotalLengthEmpty = false;
-  late AppDb _db;
   AudioEntityData? _audioEntityData;
 
   @override
   void initState() {
-    _db = AppDb();
     getAudioData();
 
     super.initState();
   }
 
   Future<void> getAudioData() async {
-    _audioEntityData = await _db.getAudio(widget.audioId);
+    _audioEntityData = await Provider.of<AppDb>(context, listen: false).getAudio(widget.audioId);
     if(_audioEntityData != null){
       _musicNameController.text = _audioEntityData!.audioName!;
       _musicURLController.text = _audioEntityData!.audioURL!;
@@ -43,7 +41,6 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
 
   @override
   void dispose() {
-    _db.close();
     _musicNameController.dispose();
     _musicURLController.dispose();
     _totalLengthController.dispose();
@@ -132,7 +129,7 @@ class _EditAudioScreenState extends State<EditAudioScreen> {
       playPosition: const drift.Value(0),
     );
 
-    _db.updateAudio(entity).then((value) => showDialog<void>(
+    Provider.of<AppDb>(context, listen: false).updateAudio(entity).then((value) => showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(

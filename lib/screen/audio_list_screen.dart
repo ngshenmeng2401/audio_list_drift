@@ -6,6 +6,7 @@ import 'package:audio_player_list_with_drift/screen/add_audio_screen.dart';
 import 'package:audio_player_list_with_drift/screen/audio_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:provider/provider.dart';
 
 class AudioListScreen extends StatefulWidget {
   const AudioListScreen({super.key});
@@ -15,7 +16,6 @@ class AudioListScreen extends StatefulWidget {
 }
 
 class _AudioListScreenState extends State<AudioListScreen> {
-  late AppDb _db;
   List<bool> isPlayedList = [];
   List<AudioEntityData>? audioList;
   Duration duration = const Duration();
@@ -29,14 +29,11 @@ class _AudioListScreenState extends State<AudioListScreen> {
   @override
   void initState() {
     super.initState();
-
-    _db = AppDb();
     getAudioListData();
   }
 
   @override
   void dispose() {
-    _db.close();
     _audioListController.close();
     super.dispose();
   }
@@ -54,11 +51,6 @@ class _AudioListScreenState extends State<AudioListScreen> {
     Navigator.pushNamed(context, AppRouter.addAudioScreen,
             arguments:
                 AddAudioScreenArguments(backButtonCallback: getAudioListData))
-        // .then((value) => () {
-        //       setState(() {
-        //         getAudioListData();
-        //       });
-        //     })
     ;
   }
 
@@ -69,27 +61,28 @@ class _AudioListScreenState extends State<AudioListScreen> {
     Navigator.pushNamed(context, AppRouter.audioDetailsScreen,
             arguments: AudioDetailScreenArguments(
                 audioId: audioId, backButtonCallback: getAudioListData))
-        // .then((value) => () {
-        //       setState(() {
-        //         getAudioListData();
-        //       });
-        //     })
     ;
   }
 
   Future<void> getAudioListData() async {
-    print("Audio List before clear: $audioList");
 
-    if (audioList != null) {
-      audioList!.clear();
+    try{
+      print("Audio List before clear: $audioList");
+
+      if (audioList != null) {
+        audioList!.clear();
+      }
+      audioList = await Provider.of<AppDb>(context, listen: false).getAudioList();
+
+      if (audioList != null) {
+        _audioListController.sink.add(audioList!);
+      }
+
+      print("Audio List after get data: $audioList");
+    }catch (e){
+      print(e);
     }
-    audioList = await _db.getAudioList();
 
-    if (audioList != null) {
-      _audioListController.sink.add(audioList!);
-    }
-
-    print("Audio List after get data: $audioList");
   }
 
   void playAudio(
@@ -110,7 +103,7 @@ class _AudioListScreenState extends State<AudioListScreen> {
           isPlaying: const drift.Value(false),
         );
       }
-      _db.updateAudio(entity);
+      Provider.of<AppDb>(context, listen: false).updateAudio(entity);
     });
   }
 
@@ -142,7 +135,7 @@ class _AudioListScreenState extends State<AudioListScreen> {
                 _deleteAudio(audioId);
                 Navigator.of(context).pop();
                 setState(() {
-                  _db.getAudioList();
+                  Provider.of<AppDb>(context, listen: false).getAudioList();
                 });
               },
             ),
@@ -153,7 +146,7 @@ class _AudioListScreenState extends State<AudioListScreen> {
   }
 
   void _deleteAudio(int audioId) {
-    _db.deleteAudio(audioId);
+    Provider.of<AppDb>(context, listen: false).deleteAudio(audioId);
   }
 
   @override
@@ -172,8 +165,8 @@ class _AudioListScreenState extends State<AudioListScreen> {
               icon: const Icon(Icons.add_circle_rounded))
         ],
       ),
-      body: StreamBuilder(
-          stream: _audioListStream,
+      body: StreamBuilder<List<AudioEntityData>>(
+          stream: Provider.of<AppDb>(context).getAudioList().asStream(),
           builder: (context, AsyncSnapshot<List<AudioEntityData>> snapshot) {
             if (snapshot.hasData) {
               return ListView.builder(

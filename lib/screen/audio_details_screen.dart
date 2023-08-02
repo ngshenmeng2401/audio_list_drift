@@ -5,6 +5,7 @@ import 'package:audio_player_list_with_drift/route/app_route.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:just_audio/just_audio.dart';
+import 'package:provider/provider.dart';
 
 class AudioDetailsScreen extends StatefulWidget {
   final AudioDetailScreenArguments arguments;
@@ -21,7 +22,6 @@ class AudioDetailsScreen extends StatefulWidget {
 }
 
 class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
-  late AppDb _db;
   AudioEntityData? _audioEntityData;
   final audioPlayer = AudioPlayer();
   Duration duration = const Duration();
@@ -45,23 +45,25 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
 
   @override
   void dispose() {
-    _db.close();
     _audioController.close();
     audioPlayer.dispose();
     super.dispose();
   }
 
   Future<void> getAudioData() async {
-    _db = AppDb();
-    _audioEntityData = await _db.getAudio(widget.arguments.audioId);
-    setState(() {
-      _audioEntityData = _audioEntityData;
-    });
-    if (_audioEntityData != null && _audioEntityData!.audioURL != null) {
-      await audioPlayer.setUrl(_audioEntityData!.audioURL!);
-    }
-    if(audioPlayer.duration != null){
-      duration = audioPlayer.duration!;
+    try{
+      _audioEntityData = await Provider.of<AppDb>(context, listen: false).getAudio(widget.arguments.audioId);
+      setState(() {
+        _audioEntityData = _audioEntityData;
+      });
+      if (_audioEntityData != null && _audioEntityData!.audioURL != null) {
+        await audioPlayer.setUrl(_audioEntityData!.audioURL!);
+      }
+      if(audioPlayer.duration != null){
+        duration = audioPlayer.duration!;
+      }
+    }catch (e){
+      print(e);
     }
 
     print("duration $duration");
@@ -113,7 +115,7 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
       }
     });
     print("isPlaying after action: $isPlaying");
-    _db.updateAudio(entity);
+    Provider.of<AppDb>(context, listen: false).updateAudio(entity);
     // setState(() {
     //   getAudioData();
     // });
@@ -171,7 +173,7 @@ class _AudioDetailsScreenState extends State<AudioDetailsScreen> {
   }
 
   void deleteAudio() {
-    _db.deleteAudio(widget.arguments.audioId);
+    Provider.of<AppDb>(context).deleteAudio(widget.arguments.audioId);
   }
 
   Widget _renderAudioSlider(int playedPosition, int totalLength) {

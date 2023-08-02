@@ -1,6 +1,7 @@
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:provider/provider.dart';
 
 class AddAudioScreen extends StatefulWidget {
   final AddAudioScreenArguments arguments;
@@ -21,7 +22,6 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
   final TextEditingController _musicURLController = TextEditingController();
   final TextEditingController _totalLengthController = TextEditingController();
   var isEmpty = true;
-  late AppDb _db;
   var addIndex = 0;
 
   @override
@@ -29,12 +29,10 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
     // TODO: implement initState
     super.initState();
 
-    _db = AppDb();
   }
 
   @override
   void dispose() {
-    _db.close();
     _musicNameController.dispose();
     _musicURLController.dispose();
     _totalLengthController.dispose();
@@ -69,7 +67,7 @@ class _AddAudioScreenState extends State<AddAudioScreen> {
       isPlaying: const drift.Value(false),
     );
 
-    _db.insertAudio(entity).then((value) => showDialog<void>(
+    Provider.of<AppDb>(context, listen: false).insertAudio(entity).then((value) => showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
