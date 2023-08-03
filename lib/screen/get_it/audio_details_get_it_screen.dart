@@ -113,20 +113,6 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
       }
     });
     print("isPlaying after action: $isPlaying");
-    // Provider.of<AppDb>(context, listen: false).updateAudio(entity);
-    // setState(() {
-    //   getAudioData();
-    // });
-    // audioPlayer.onDurationChanged.listen((Duration dd) {
-    //   setState(() {
-    //     duration = dd;
-    //   });
-    // });
-    // audioPlayer.onPositionChanged.listen((Duration dd) {
-    //   setState(() {
-    //     position = dd;
-    //   });
-    // });
   }
 
   Future<bool> _onWillPop() async {
