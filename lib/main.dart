@@ -7,12 +7,12 @@ import 'package:provider/provider.dart';
 
 void main() {
   setupServiceLocator();
-  // runApp(MyApp());
-  runApp(Provider(
-    create: (context) => AppDb(),
-    child: MyApp(),
-    dispose: (context, AppDb db) => db.close(),
-  ));
+  runApp(MyApp());
+  // runApp(Provider(
+  //   create: (context) => AppDb(),
+  //   child: MyApp(),
+  //   dispose: (context, AppDb db) => db.close(),
+  // ));
 }
 
 class MyApp extends StatelessWidget {
@@ -28,7 +28,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: AppRouter.bottomNavigationBarWidget,
+      initialRoute: AppRouter.audioPlayerListWithGetItScreen,
       onGenerateRoute: AppRouter.generatedRoute,
     );
   }
