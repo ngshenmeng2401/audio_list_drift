@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:audio_player_list_with_drift/route/app_route.dart';
+import 'package:audio_player_list_with_drift/screen/controller/audio_controller.dart';
 import 'package:audio_player_list_with_drift/screen/get_it/add_audio_get_it_screen.dart';
 import 'package:audio_player_list_with_drift/screen/get_it/audio_details_get_it_screen.dart';
 import 'package:audio_player_list_with_drift/service/service_locator.dart';
@@ -17,25 +18,19 @@ class AudioListWithGetItScreen extends StatefulWidget {
 }
 
 class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
-  List<bool> isPlayedList = [];
-  List<AudioEntityData>? audioList;
-  Duration duration = const Duration();
-  Duration position = const Duration();
-  final StreamController<List<AudioEntityData>> _audioListController =
-      StreamController<List<AudioEntityData>>();
 
-  Stream<List<AudioEntityData>> get _audioListStream =>
-      _audioListController.stream;
+  final AudioController audioController = AudioController();
+  bool isPlaying = false;
 
   @override
   void initState() {
     super.initState();
-    getAudioListData();
+    audioController.getAudioListData();
   }
 
   @override
   void dispose() {
-    _audioListController.close();
+    audioController.audioListControllerStream.close();
     super.dispose();
   }
 
@@ -51,7 +46,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
   void navigateToAddAudioScreen(BuildContext context) {
     Navigator.pushNamed(context, AppRouter.addAudioWithGetItScreen,
             arguments:
-                AddAudioWithGetItScreenArguments(backButtonCallback: getAudioListData))
+                AddAudioWithGetItScreenArguments(backButtonCallback: audioController.getAudioListData))
     ;
   }
 
@@ -61,95 +56,8 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
 
     Navigator.pushNamed(context, AppRouter.audioDetailsWithGetItScreen,
             arguments: AudioDetailWithGetItScreenArguments(
-                audioId: audioId, backButtonCallback: getAudioListData))
+                audioId: audioId, backButtonCallback: audioController.getAudioListData))
     ;
-  }
-
-  Future<void> getAudioListData() async {
-
-    try{
-      print("Audio List before clear: $audioList");
-
-      if (audioList != null) {
-        audioList!.clear();
-      }
-      audioList = await getIt.get<AppDb>().getAudioList();
-
-      if (audioList != null) {
-        _audioListController.sink.add(audioList!);
-      }
-
-      print("Audio List after get data: $audioList");
-    }catch (ex){
-      Fimber.e('d;;exception', ex: ex);
-    }
-
-  }
-
-  void playAudio(
-      bool isPlayed, int audioId) {
-    var entity;
-
-    setState(() {
-      if (isPlayed == true) {
-        entity = AudioEntityCompanion(
-          audioId: drift.Value(audioId),
-          playPosition: const drift.Value(0),
-          isPlaying: const drift.Value(false),
-        );
-      } else {
-        entity = AudioEntityCompanion(
-          audioId: drift.Value(audioId),
-          playPosition: const drift.Value(0),
-          isPlaying: const drift.Value(false),
-        );
-      }
-      getIt.get<AppDb>().updateAudio(entity);
-    });
-  }
-
-  Future<void> _showDeleteAudioDialog(BuildContext context, int audioId) {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Audio'),
-          content: const Text(
-            'Are you sure want to delete this audio ?',
-          ),
-          actions: <Widget>[
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: const Text('OK'),
-              onPressed: () {
-                _deleteAudio(audioId);
-                Navigator.of(context).pop();
-                setState(() {
-                  getIt.get<AppDb>().getAudioList();
-                });
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _deleteAudio(int audioId) {
-    getIt.get<AppDb>().deleteAudio(audioId);
-
-    getAudioListData();
   }
 
   @override
@@ -169,7 +77,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
         ],
       ),
       body: StreamBuilder<List<AudioEntityData>>(
-          stream: _audioListStream,
+          stream: audioController.audioListStream,
           builder: (context, AsyncSnapshot<List<AudioEntityData>> snapshot) {
             if (snapshot.hasData) {
               return ListView.builder(
@@ -184,7 +92,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                                 snapshot.data![index].audioId,);
                           },
                           onLongPress: () {
-                            _showDeleteAudioDialog(
+                            audioController.showDeleteAudioDialog(
                                 context, snapshot.data![index].audioId);
                           },
                           title: Text(snapshot.data![index].audioName!),
@@ -197,25 +105,31 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                             decoration: BoxDecoration(
                                 color: Colors.blue,
                                 borderRadius: BorderRadius.circular(50)),
-                            child: snapshot.data![index].isPlaying == false
+                            child: !audioController.isPlayedList[index]
                                 ? IconButton(
                                     icon: const Icon(
                                       color: Colors.white,
                                       Icons.play_arrow,
                                     ),
                                     onPressed: () {
-                                      playAudio(
-                                          snapshot.data![index].isPlaying!,
-                                          snapshot.data![index].audioId,);
+                                      setState(() {
+                                        audioController.playAudio(
+                                            audioController.isPlayedList[index],
+                                          snapshot.data![index].audioId,
+                                          index);
+                                      });
                                     },
                                   )
                                 : IconButton(
                                     icon: const Icon(
                                         color: Colors.white, Icons.pause),
                                     onPressed: () {
-                                      playAudio(
-                                          snapshot.data![index].isPlaying!,
-                                          snapshot.data![index].audioId,);
+                                      setState(() {
+                                        audioController.playAudio(
+                                            audioController.isPlayedList[index],
+                                          snapshot.data![index].audioId,
+                                          index);
+                                      });
                                     },
                                   ),
                           ),
