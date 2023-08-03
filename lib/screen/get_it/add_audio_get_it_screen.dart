@@ -1,4 +1,5 @@
 import 'package:audio_player_list_with_drift/db/app_db.dart';
+import 'package:audio_player_list_with_drift/screen/controller/audio_controller.dart';
 import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
@@ -18,80 +19,26 @@ class AddAudioWithGetItScreen extends StatefulWidget {
 }
 
 class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
-  final TextEditingController _musicNameController = TextEditingController();
-  final TextEditingController _musicURLController = TextEditingController();
-  final TextEditingController _totalLengthController = TextEditingController();
-  var isEmpty = true;
-  var addIndex = 0;
+
+  final AudioController audioController = AudioController();
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
   }
 
   @override
   void dispose() {
-    _musicNameController.dispose();
-    _musicURLController.dispose();
-    _totalLengthController.dispose();
+    audioController.musicNameController.dispose();
+    audioController.musicURLController.dispose();
+    audioController.totalLengthController.dispose();
     super.dispose();
   }
 
   Future<bool> _onWillPop() async {
     widget.arguments.backButtonCallback();
     return true;
-  }
-
-  void checkTextFieldIsEmpty() {
-    if (_musicNameController.text.isEmpty ||
-        _musicURLController.text.isEmpty ||
-        _totalLengthController.text.isEmpty) {
-      setState(() {
-        isEmpty = true;
-      });
-    } else {
-      setState(() {
-        isEmpty = false;
-      });
-    }
-  }
-
-  void addAudioToDb() {
-    final entity = AudioEntityCompanion(
-      audioName: drift.Value(_musicNameController.text),
-      audioURL: drift.Value(_musicURLController.text),
-      totalLength: drift.Value(int.parse(_totalLengthController.text)),
-      playPosition: const drift.Value(0),
-      isPlaying: const drift.Value(false),
-    );
-
-    getIt.get<AppDb>().insertAudio(entity).then((value) => showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Add Successful'),
-          content: const Text(
-            '',
-          ),
-          actions: <Widget>[
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: const Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    ));
-    _musicNameController.clear();
-    _musicURLController.clear();
-    _totalLengthController.clear();
   }
 
   @override
@@ -113,9 +60,13 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
                 children: [
                   TextField(
                     enableInteractiveSelection: true,
-                    onChanged: (value) => checkTextFieldIsEmpty(),
+                    onChanged: (value) => {
+                      setState(() {
+                        audioController.checkTextFieldIsEmpty();
+                      })
+                    },
                     keyboardType: TextInputType.name,
-                    controller: _musicNameController,
+                    controller: audioController.musicNameController,
                     decoration: const InputDecoration(
                       labelText: "Music Name",
                     ),
@@ -123,9 +74,13 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
                   const SizedBox(height: 15),
                   TextField(
                     enableInteractiveSelection: true,
-                    onChanged: (value) => checkTextFieldIsEmpty(),
+                    onChanged: (value) => {
+                      setState(() {
+                        audioController.checkTextFieldIsEmpty();
+                      })
+                    },
                     keyboardType: TextInputType.name,
-                    controller: _musicURLController,
+                    controller: audioController.musicURLController,
                     decoration: const InputDecoration(
                       labelText: "Music URL",
                     ),
@@ -133,9 +88,13 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
                   const SizedBox(height: 15),
                   TextField(
                     enableInteractiveSelection: true,
-                    onChanged: (value) => checkTextFieldIsEmpty(),
+                    onChanged: (value) => {
+                      setState(() {
+                        audioController.checkTextFieldIsEmpty();
+                      })
+                    },
                     keyboardType: TextInputType.number,
-                    controller: _totalLengthController,
+                    controller: audioController.totalLengthController,
                     decoration: const InputDecoration(
                       labelText: "Total Length",
                     ),
@@ -148,10 +107,10 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
                       minWidth: screenWidth,
                       height: screenHeight / 18,
                       color: Colors.blue,
-                      onPressed: isEmpty
+                      onPressed: !audioController.isEmptyAdd
                           ? null
                           : () {
-                              addAudioToDb();
+                        audioController.addAudioToDb(context);
                               // addIndex++;
                               // Navigator.pop(context, addIndex.toString());
                             },
