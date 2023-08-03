@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:audio_player_list_with_drift/route/app_route.dart';
-import 'package:audio_player_list_with_drift/screen/controller/audio_controller.dart';
+import 'package:audio_player_list_with_drift/screen/controller/audio_drift_controller.dart';
 import 'package:audio_player_list_with_drift/screen/get_it/add_audio_get_it_screen.dart';
 import 'package:audio_player_list_with_drift/screen/get_it/audio_details_get_it_screen.dart';
 import 'package:audio_player_list_with_drift/service/service_locator.dart';
@@ -14,23 +14,23 @@ class AudioListWithGetItScreen extends StatefulWidget {
   const AudioListWithGetItScreen({super.key});
 
   @override
-  State<AudioListWithGetItScreen> createState() => _AudioListWithGetItScreenState();
+  State<AudioListWithGetItScreen> createState() =>
+      _AudioListWithGetItScreenState();
 }
 
 class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
-
-  final AudioController audioController = AudioController();
+  final AudioDriftController audioDriftController = AudioDriftController();
   bool isPlaying = false;
 
   @override
   void initState() {
     super.initState();
-    audioController.getAudioListData();
+    audioDriftController.getAudioListData();
   }
 
   @override
   void dispose() {
-    audioController.audioListControllerStream.close();
+    audioDriftController.audioListControllerStream.close();
     super.dispose();
   }
 
@@ -45,19 +45,19 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
 
   void navigateToAddAudioScreen(BuildContext context) {
     Navigator.pushNamed(context, AppRouter.addAudioWithGetItScreen,
-            arguments:
-                AddAudioWithGetItScreenArguments(backButtonCallback: audioController.getAudioListData))
-    ;
+        arguments: AddAudioWithGetItScreenArguments(
+            backButtonCallback: audioDriftController.getAudioListData));
   }
 
   void navigateToAudioDetailsScreen(
     int audioId,
+    int index,
   ) async {
-
     Navigator.pushNamed(context, AppRouter.audioDetailsWithGetItScreen,
-            arguments: AudioDetailWithGetItScreenArguments(
-                audioId: audioId, backButtonCallback: audioController.getAudioListData))
-    ;
+        arguments: AudioDetailWithGetItScreenArguments(
+            audioId: audioId,
+            index: index,
+            backButtonCallback: audioDriftController.getAudioListData));
   }
 
   @override
@@ -77,7 +77,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
         ],
       ),
       body: StreamBuilder<List<AudioEntityData>>(
-          stream: audioController.audioListStream,
+          stream: audioDriftController.audioListStream,
           builder: (context, AsyncSnapshot<List<AudioEntityData>> snapshot) {
             if (snapshot.hasData) {
               return ListView.builder(
@@ -89,10 +89,10 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                         child: ListTile(
                           onTap: () {
                             navigateToAudioDetailsScreen(
-                                snapshot.data![index].audioId,);
+                                snapshot.data![index].audioId, index);
                           },
                           onLongPress: () {
-                            audioController.showDeleteAudioDialog(
+                            audioDriftController.showDeleteAudioDialog(
                                 context, snapshot.data![index].audioId);
                           },
                           title: Text(snapshot.data![index].audioName!),
@@ -105,7 +105,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                             decoration: BoxDecoration(
                                 color: Colors.blue,
                                 borderRadius: BorderRadius.circular(50)),
-                            child: !audioController.isPlayedList[index]
+                            child: !audioDriftController.isPlayedList[index]
                                 ? IconButton(
                                     icon: const Icon(
                                       color: Colors.white,
@@ -113,10 +113,11 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                                     ),
                                     onPressed: () {
                                       setState(() {
-                                        audioController.playAudio(
-                                            audioController.isPlayedList[index],
-                                          snapshot.data![index].audioId,
-                                          index);
+                                        audioDriftController.playAudio(
+                                            audioDriftController.isPlayedList[index],
+                                            snapshot.data![index].audioId,
+                                            index,
+                                            snapshot.data![index].audioURL!);
                                       });
                                     },
                                   )
@@ -125,10 +126,11 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                                         color: Colors.white, Icons.pause),
                                     onPressed: () {
                                       setState(() {
-                                        audioController.playAudio(
-                                            audioController.isPlayedList[index],
-                                          snapshot.data![index].audioId,
-                                          index);
+                                        audioDriftController.playAudio(
+                                            audioDriftController.isPlayedList[index],
+                                            snapshot.data![index].audioId,
+                                            index,
+                                            snapshot.data![index].audioURL!);
                                       });
                                     },
                                   ),

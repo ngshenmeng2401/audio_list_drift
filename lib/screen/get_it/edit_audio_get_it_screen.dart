@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:audio_player_list_with_drift/db/app_db.dart';
-import 'package:audio_player_list_with_drift/screen/controller/audio_controller.dart';
+import 'package:audio_player_list_with_drift/screen/controller/audio_drift_controller.dart';
 import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
@@ -23,7 +23,7 @@ class EditAudioWithGetItScreen extends StatefulWidget {
 
 class _EditAudioWithGetItScreenState extends State<EditAudioWithGetItScreen> {
 
-  final AudioController audioController = AudioController();
+  final AudioDriftController audioDriftController = AudioDriftController();
   AudioEntityData? _audioEntityData;
 
   @override
@@ -38,9 +38,9 @@ class _EditAudioWithGetItScreenState extends State<EditAudioWithGetItScreen> {
       _audioEntityData = await getIt.get<AppDb>().getAudio(widget.arguments.audioId);
       if(_audioEntityData != null){
         // _audioController.sink.add(_audioEntityData!);
-        audioController.musicNameController.text = _audioEntityData!.audioName!;
-        audioController.musicURLController.text = _audioEntityData!.audioURL!;
-        audioController.totalLengthController.text = _audioEntityData!.totalLength.toString();
+        audioDriftController.musicNameController.text = _audioEntityData!.audioName!;
+        audioDriftController.musicURLController.text = _audioEntityData!.audioURL!;
+        audioDriftController.totalLengthController.text = _audioEntityData!.totalLength.toString();
       }
     }catch (ex){
       Fimber.e('d;;exception', ex: ex);
@@ -50,9 +50,9 @@ class _EditAudioWithGetItScreenState extends State<EditAudioWithGetItScreen> {
 
   @override
   void dispose() {
-    audioController.musicNameController.dispose();
-    audioController.musicURLController.dispose();
-    audioController.totalLengthController.dispose();
+    audioDriftController.musicNameController.dispose();
+    audioDriftController.musicURLController.dispose();
+    audioDriftController.totalLengthController.dispose();
     super.dispose();
   }
 
@@ -82,19 +82,19 @@ class _EditAudioWithGetItScreenState extends State<EditAudioWithGetItScreen> {
                     enableInteractiveSelection: true,
                     onChanged: (value) => {
                       setState(() {
-                        audioController.checkTextField();
+                        audioDriftController.checkTextField();
                       })
                     },
                     keyboardType: TextInputType.name,
-                    controller: audioController.musicNameController,
+                    controller: audioDriftController.musicNameController,
                     decoration: InputDecoration(
                         labelText: "Music Name",
-                        suffixIcon: audioController.isMusicNameEmpty
+                        suffixIcon: audioDriftController.isMusicNameEmpty
                             ? null
                             : IconButton(
                                 onPressed: () {
                                   setState(() {
-                                    audioController.clearTextField(ClearTextFieldType.musicName);
+                                    audioDriftController.clearTextField(ClearTextFieldType.musicName);
                                   });
                                 },
                                 icon: const Icon(Icons.clear_rounded))),
@@ -104,19 +104,19 @@ class _EditAudioWithGetItScreenState extends State<EditAudioWithGetItScreen> {
                     enableInteractiveSelection: true,
                     onChanged: (value) => {
                       setState(() {
-                        audioController.checkTextField();
+                        audioDriftController.checkTextField();
                       })
                     },
                     keyboardType: TextInputType.name,
-                    controller: audioController.musicURLController,
+                    controller: audioDriftController.musicURLController,
                     decoration: InputDecoration(
                         labelText: "Music URL",
-                        suffixIcon: audioController.isMusicURLEmpty
+                        suffixIcon: audioDriftController.isMusicURLEmpty
                             ? null
                             : IconButton(
                                 onPressed: () {
                                   setState(() {
-                                    audioController.clearTextField(ClearTextFieldType.musicURL);
+                                    audioDriftController.clearTextField(ClearTextFieldType.musicURL);
                                   });
                                 },
                                 icon: const Icon(Icons.clear_rounded))),
@@ -126,19 +126,19 @@ class _EditAudioWithGetItScreenState extends State<EditAudioWithGetItScreen> {
                     enableInteractiveSelection: true,
                     onChanged: (value) => {
                       setState(() {
-                        audioController.checkTextField();
+                        audioDriftController.checkTextField();
                       })
                     },
                     keyboardType: TextInputType.number,
-                    controller: audioController.totalLengthController,
+                    controller: audioDriftController.totalLengthController,
                     decoration: InputDecoration(
                         labelText: "Total Length",
-                        suffixIcon: audioController.isTotalLengthEmpty
+                        suffixIcon: audioDriftController.isTotalLengthEmpty
                             ? null
                             : IconButton(
                                 onPressed: () {
                                   setState(() {
-                                    audioController.clearTextField(ClearTextFieldType.totalLength);
+                                    audioDriftController.clearTextField(ClearTextFieldType.totalLength);
                                   });
                                 },
                                 icon: const Icon(Icons.clear_rounded))),
@@ -151,10 +151,10 @@ class _EditAudioWithGetItScreenState extends State<EditAudioWithGetItScreen> {
                       minWidth: screenWidth,
                       height: screenHeight / 18,
                       color: Colors.blue,
-                      onPressed: audioController.isEmptyEdit
+                      onPressed: audioDriftController.isEmptyEdit
                           ? null
                           : () {
-                              audioController.editAudioToDb(context, widget.arguments.audioId);
+                              audioDriftController.editAudioToDb(context, widget.arguments.audioId);
                             },
                       child: const Text("Edit",
                           style: TextStyle(

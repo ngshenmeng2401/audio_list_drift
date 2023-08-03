@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:audio_player_list_with_drift/route/app_route.dart';
+import 'package:audio_player_list_with_drift/screen/controller/audio_drift_controller.dart';
 import 'package:audio_player_list_with_drift/screen/get_it/edit_audio_get_it_screen.dart';
 import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
@@ -25,14 +26,12 @@ class AudioDetailsWithGetItScreen extends StatefulWidget {
 
 class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScreen> {
   AudioEntityData? _audioEntityData;
-  final audioPlayer = AudioPlayer();
-  Duration duration = const Duration();
-  Duration position = const Duration();
-  bool? isPlaying = false;
   final StreamController<AudioEntityData> _audioController =
       StreamController<AudioEntityData>();
 
   Stream<AudioEntityData> get _audioStream => _audioController.stream;
+
+  final AudioDriftController audioDriftController = AudioDriftController();
 
   @override
   void initState() {
@@ -46,7 +45,7 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
   @override
   void dispose() {
     _audioController.close();
-    audioPlayer.dispose();
+    // audioPlayer.dispose();
     super.dispose();
   }
 
@@ -61,22 +60,22 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
       if (_audioEntityData != null) {
         _audioController.sink.add(_audioEntityData!);
         if (_audioEntityData!.audioURL != null) {
-          await audioPlayer.setUrl(_audioEntityData!.audioURL!);
+          await audioDriftController.audioPlayer.setUrl(_audioEntityData!.audioURL!);
         }
       }
-      if (audioPlayer.duration != null) {
-        duration = audioPlayer.duration!;
+      if (audioDriftController.audioPlayer.duration != null) {
+        audioDriftController.duration = audioDriftController.audioPlayer.duration!;
       }
     } catch (ex) {
       Fimber.e('d;;exception', ex: ex);
     }
 
-    print("duration $duration");
+    print("duration ${audioDriftController.duration}");
     setState(() {});
-    audioPlayer.positionStream.listen((event) {
-      position = event;
+    audioDriftController.audioPlayer.positionStream.listen((event) {
+      audioDriftController.position = event;
       setState(() {
-        print("position: $position");
+        print("position: ${audioDriftController.position}");
       });
     });
   }
@@ -85,34 +84,6 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
     await Navigator.pushNamed(context, AppRouter.editAudioWithGetItScreen,
             arguments: EditAudioWithGetItScreenArguments(
                 audioId: audioId, backButtonCallback: getAudioData));
-  }
-
-  void playAudio(bool isPlay, int playedPosition) {
-    var entity;
-    print("isPlaying before action: $isPlaying");
-    setState(() {
-      if (isPlay) {
-        audioPlayer.pause();
-        isPlaying = false;
-        // entity = AudioEntityCompanion(
-        //   audioId: drift.Value(widget.arguments.audioId),
-        //   playPosition: drift.Value(position.inSeconds.toInt()),
-        //   isPlaying: const drift.Value(false),
-        // );
-      } else {
-        if (playedPosition != 0) {
-          audioPlayer.seek(Duration(seconds: playedPosition));
-        }
-        audioPlayer.play();
-        isPlaying = true;
-        // entity = AudioEntityCompanion(
-        //   audioId: drift.Value(widget.arguments.audioId),
-        //   // playPosition: const drift.Value(0),
-        //   isPlaying: const drift.Value(true),
-        // );
-      }
-    });
-    print("isPlaying after action: $isPlaying");
   }
 
   Future<bool> _onWillPop() async {
@@ -161,14 +132,14 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
   }
 
   Widget _renderAudioSlider(int playedPosition, int totalLength) {
-    print("Position: $position");
+    print("Position: ${audioDriftController.position}");
     return Slider(
         min: 0.0,
         max: totalLength.toDouble(),
-        value: position.inSeconds.toDouble(),
+        value: audioDriftController.position.inSeconds.toDouble(),
         onChanged: (double value) {
           setState(() {
-            audioPlayer.seek(Duration(seconds: value.toInt()));
+            audioDriftController.audioPlayer.seek(Duration(seconds: value.toInt()));
           });
         });
   }
@@ -181,7 +152,7 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
         children: [
           Text(
             // "0",
-            _formatDuration(Duration(seconds: position.inSeconds.toInt())),
+            _formatDuration(Duration(seconds: audioDriftController.position.inSeconds.toInt())),
             style: const TextStyle(fontSize: 16),
           ),
           Text(
@@ -258,7 +229,7 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
                                 width: screenWidth * 0.2,
                                 decoration: const BoxDecoration(
                                     color: Colors.blue, shape: BoxShape.circle),
-                                child: !isPlaying!
+                                child: !audioDriftController.isPlaying!
                                     ? IconButton(
                                         icon: const Icon(
                                           Icons.play_arrow,
@@ -266,8 +237,10 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
                                           size: 50,
                                         ),
                                         onPressed: () {
-                                          playAudio(isPlaying!,
-                                              snapshot.data!.playPosition!);
+                                          setState(() {
+                                            audioDriftController.playAudio(audioDriftController.isPlaying!,
+                                                snapshot.data!.playPosition!, widget.arguments.index, snapshot.data!.audioURL!);
+                                          });
                                         },
                                       )
                                     : IconButton(
@@ -277,8 +250,10 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
                                           size: 50,
                                         ),
                                         onPressed: () {
-                                          playAudio(isPlaying!,
-                                              snapshot.data!.playPosition!);
+                                          setState(() {
+                                            audioDriftController.playAudio(audioDriftController.isPlaying!,
+                                                snapshot.data!.playPosition!, widget.arguments.index, snapshot.data!.audioURL!);
+                                          });
                                         },
                                       ),
                               ),
@@ -304,8 +279,9 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
 
 class AudioDetailWithGetItScreenArguments {
   int audioId;
+  int index;
   final Function() backButtonCallback;
 
   AudioDetailWithGetItScreenArguments(
-      {required this.audioId, required this.backButtonCallback});
+      {required this.audioId, required this.index, required this.backButtonCallback});
 }

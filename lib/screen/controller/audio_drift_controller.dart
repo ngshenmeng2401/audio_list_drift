@@ -9,9 +9,11 @@ import 'package:just_audio/just_audio.dart';
 
 enum ClearTextFieldType { musicName, musicURL, totalLength }
 
-class AudioController {
+class AudioDriftController {
   List<bool> isPlayedList = [];
+  bool? isPlaying = false;
   List<AudioEntityData>? audioList;
+  final audioPlayer = AudioPlayer();
   Duration duration = const Duration();
   Duration position = const Duration();
 
@@ -45,25 +47,41 @@ class AudioController {
           isPlayedList.insert(i, false);
         }
       }
+      if (audioPlayer.duration != null) {
+        duration = audioPlayer.duration!;
+      }
+      audioPlayer.setUrl(audioList![0].audioURL!);
 
       print("Audio List after get data: $audioList");
     } catch (ex) {
       Fimber.e('d;;exception', ex: ex);
     }
+    audioPlayer.positionStream.listen((event) {
+      position = event;
+      print("position: $position");
+    });
   }
 
-  void playAudio(bool isPlayed, int audioId, int index) {
+  void playAudio(bool isPlayed, int audioId, int index, String audioURL) {
     var entity;
 
     if (isPlayed == true) {
+      audioPlayer.pause();
       isPlayedList[index] = false;
+      isPlaying = false;
       entity = AudioEntityCompanion(
         audioId: drift.Value(audioId),
         playPosition: const drift.Value(0),
         isPlaying: const drift.Value(false),
       );
     } else {
+      audioPlayer.setUrl(audioURL);
+      // if (playedPosition != 0) {
+        audioPlayer.seek(Duration(seconds: position.inSeconds.toInt()));
+      // }
+      audioPlayer.play();
       isPlayedList[index] = true;
+      isPlaying = true;
       entity = AudioEntityCompanion(
         audioId: drift.Value(audioId),
         playPosition: const drift.Value(0),

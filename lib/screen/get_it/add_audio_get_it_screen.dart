@@ -1,5 +1,5 @@
 import 'package:audio_player_list_with_drift/db/app_db.dart';
-import 'package:audio_player_list_with_drift/screen/controller/audio_controller.dart';
+import 'package:audio_player_list_with_drift/screen/controller/audio_drift_controller.dart';
 import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
@@ -20,7 +20,7 @@ class AddAudioWithGetItScreen extends StatefulWidget {
 
 class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
 
-  final AudioController audioController = AudioController();
+  final AudioDriftController audioDriftController = AudioDriftController();
 
   @override
   void initState() {
@@ -30,9 +30,9 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
 
   @override
   void dispose() {
-    audioController.musicNameController.dispose();
-    audioController.musicURLController.dispose();
-    audioController.totalLengthController.dispose();
+    audioDriftController.musicNameController.dispose();
+    audioDriftController.musicURLController.dispose();
+    audioDriftController.totalLengthController.dispose();
     super.dispose();
   }
 
@@ -62,11 +62,11 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
                     enableInteractiveSelection: true,
                     onChanged: (value) => {
                       setState(() {
-                        audioController.checkTextFieldIsEmpty();
+                        audioDriftController.checkTextFieldIsEmpty();
                       })
                     },
                     keyboardType: TextInputType.name,
-                    controller: audioController.musicNameController,
+                    controller: audioDriftController.musicNameController,
                     decoration: const InputDecoration(
                       labelText: "Music Name",
                     ),
@@ -76,11 +76,11 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
                     enableInteractiveSelection: true,
                     onChanged: (value) => {
                       setState(() {
-                        audioController.checkTextFieldIsEmpty();
+                        audioDriftController.checkTextFieldIsEmpty();
                       })
                     },
                     keyboardType: TextInputType.name,
-                    controller: audioController.musicURLController,
+                    controller: audioDriftController.musicURLController,
                     decoration: const InputDecoration(
                       labelText: "Music URL",
                     ),
@@ -90,11 +90,11 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
                     enableInteractiveSelection: true,
                     onChanged: (value) => {
                       setState(() {
-                        audioController.checkTextFieldIsEmpty();
+                        audioDriftController.checkTextFieldIsEmpty();
                       })
                     },
                     keyboardType: TextInputType.number,
-                    controller: audioController.totalLengthController,
+                    controller: audioDriftController.totalLengthController,
                     decoration: const InputDecoration(
                       labelText: "Total Length",
                     ),
@@ -107,10 +107,10 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
                       minWidth: screenWidth,
                       height: screenHeight / 18,
                       color: Colors.blue,
-                      onPressed: !audioController.isEmptyAdd
+                      onPressed: !audioDriftController.isEmptyAdd
                           ? null
                           : () {
-                        audioController.addAudioToDb(context);
+                        audioDriftController.addAudioToDb(context);
                               // addIndex++;
                               // Navigator.pop(context, addIndex.toString());
                             },
