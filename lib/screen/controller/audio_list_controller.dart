@@ -7,6 +7,32 @@ import 'package:flutter_fimber/flutter_fimber.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:just_audio/just_audio.dart';
 
+class AudioListController {
+  final audioListVN = ValueNotifier<List<AudioEntityData>>([]);
+
+  Future<void> refreshAudioList() async {
+    try {
+      // print("Audio List before clear: $audioList");
+
+      // if (audioListVN.value != null) {
+        audioListVN.value.clear();
+      // }
+      audioListVN.value = await getIt.get<AppDb>().getAudioList();
+
+      // if (audioListVN.value != null) {
+      //   audioListControllerStream.sink.add(audioList!);
+      // }
+      // print("Audio List after get data: $audioList");
+    } catch (ex) {
+      Fimber.e('d;;exception', ex: ex);
+    }
+  }
+
+  void dispose() {
+    audioListVN.dispose();
+  }
+}
+
 enum ClearTextFieldType { musicName, musicURL, totalLength }
 
 class AudioDriftController {
