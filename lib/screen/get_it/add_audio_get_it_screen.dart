@@ -131,6 +131,7 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
 
 class AddAudioWithGetItScreenArguments {
   final Function() backButtonCallback;
+  final Function() backButtonCallback2;
 
-  AddAudioWithGetItScreenArguments({required this.backButtonCallback});
+  AddAudioWithGetItScreenArguments({required this.backButtonCallback, required this.backButtonCallback2});
 }

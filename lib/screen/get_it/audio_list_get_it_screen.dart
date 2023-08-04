@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:audio_player_list_with_drift/route/app_route.dart';
 import 'package:audio_player_list_with_drift/screen/controller/audio_drift_controller.dart';
+import 'package:audio_player_list_with_drift/screen/controller/audio_player_controller.dart';
 import 'package:audio_player_list_with_drift/screen/get_it/add_audio_get_it_screen.dart';
 import 'package:audio_player_list_with_drift/screen/get_it/audio_details_get_it_screen.dart';
 import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter_fimber/flutter_fimber.dart';
+import 'package:get_it/get_it.dart';
 
 class AudioListWithGetItScreen extends StatefulWidget {
   const AudioListWithGetItScreen({super.key});
@@ -19,13 +21,30 @@ class AudioListWithGetItScreen extends StatefulWidget {
 }
 
 class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
-  final AudioDriftController audioDriftController = AudioDriftController();
+
+
+  final GetIt getIt = GetIt.instance;
+  late AudioDriftController audioDriftController;
+  late AudioPlayerController audioPlayerController;
+
   bool isPlaying = false;
 
   @override
   void initState() {
     super.initState();
+    audioDriftController = getIt.get<AudioDriftController>();
+    audioPlayerController = getIt.get<AudioPlayerController>();
+
     audioDriftController.getAudioListData();
+    // audioPlayerController.initPlayButtonList();
+
+    // setState(() {});
+    // audioPlayerController.audioPlayer.positionStream.listen((event) {
+    //   audioPlayerController.position = event;
+    //   setState(() {
+    //     print("position: ${audioPlayerController.position}");
+    //   });
+    // });
   }
 
   @override
@@ -44,20 +63,61 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
   }
 
   void navigateToAddAudioScreen(BuildContext context) {
-    Navigator.pushNamed(context, AppRouter.addAudioWithGetItScreen,
-        arguments: AddAudioWithGetItScreenArguments(
-            backButtonCallback: audioDriftController.getAudioListData));
+    // Navigator.pushNamed(context, AppRouter.addAudioWithGetItScreen,
+    //     arguments: AddAudioWithGetItScreenArguments(
+    //         backButtonCallback: audioDriftController.getAudioListData,
+    //         backButtonCallback2: audioPlayerController.initPlayButtonList));
   }
 
   void navigateToAudioDetailsScreen(
-    int audioId,
-    int index,
-  ) async {
+      int audioId, int index, String audioURL) async {
     Navigator.pushNamed(context, AppRouter.audioDetailsWithGetItScreen,
         arguments: AudioDetailWithGetItScreenArguments(
             audioId: audioId,
             index: index,
-            backButtonCallback: audioDriftController.getAudioListData));
+            audioURL: audioURL,
+            backButtonCallback: audioDriftController.getAudioListData,
+            backButtonCallback2: audioDriftController.getAudioListData
+        ));
+  }
+
+  Widget _renderPlayDuration(int total, bool isPlayed) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 0),
+      child: !isPlayed
+          ? Row(
+              children: [
+                // audioPlayerController.position.inSeconds.toDouble() ==
+                //         audioPlayerController.duration.inSeconds.toDouble()
+                //     ? Text(
+                //         _formatDuration(const Duration(seconds: 0)),
+                //         style: const TextStyle(fontSize: 14),
+                //       )
+                //     :
+                // Text(
+                //         _formatDuration(Duration(
+                //             seconds: audioPlayerController.position.inSeconds
+                //                 .toInt())),
+                //         style: const TextStyle(fontSize: 14),
+                //       ),
+                const SizedBox(width: 5,),
+                const Text(
+                  "-",
+                  style: TextStyle(fontSize: 14),
+                ),
+                const SizedBox(width: 5,),
+                Text(
+                  _formatDuration(Duration(seconds: total)),
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ],
+            )
+          : Text(
+              // "0",
+              _formatDuration(Duration(seconds: total)),
+              style: const TextStyle(fontSize: 14),
+            ),
+    );
   }
 
   @override
@@ -76,7 +136,8 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
               icon: const Icon(Icons.add_circle_rounded))
         ],
       ),
-      body: StreamBuilder<List<AudioEntityData>>(
+      body:
+      StreamBuilder<List<AudioEntityData>>(
           stream: audioDriftController.audioListStream,
           builder: (context, AsyncSnapshot<List<AudioEntityData>> snapshot) {
             if (snapshot.hasData) {
@@ -89,51 +150,79 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                         child: ListTile(
                           onTap: () {
                             navigateToAudioDetailsScreen(
-                                snapshot.data![index].audioId, index);
+                                snapshot.data![index].audioId,
+                                index,
+                                snapshot.data![index].audioURL!);
                           },
                           onLongPress: () {
                             audioDriftController.showDeleteAudioDialog(
                                 context, snapshot.data![index].audioId);
                           },
                           title: Text(snapshot.data![index].audioName!),
-                          subtitle: snapshot.data![index].playPosition! != 0
-                              ? Text(
-                                  "${_formatDuration(Duration(seconds: snapshot.data![index].playPosition!))} - ${_formatDuration(Duration(seconds: snapshot.data![index].totalLength!))}")
-                              : Text(
-                                  "0 - ${_formatDuration(Duration(seconds: snapshot.data![index].totalLength!))}"),
+                          // subtitle: _renderPlayDuration(
+                          //     snapshot.data![index].totalLength!,
+                          //     !audioPlayerController.isPlayedList[index]),
                           trailing: Container(
                             decoration: BoxDecoration(
                                 color: Colors.blue,
                                 borderRadius: BorderRadius.circular(50)),
-                            child: !audioDriftController.isPlayedList[index]
-                                ? IconButton(
+                            child:
+                            // !audioPlayerController.isPlayedList[index] ?
+                            StreamBuilder<int>(
+                              stream: audioPlayerController.audioIdStream,
+                              builder: (context, audioPlayerControllerSnapshot) {
+                                print("d;; ${audioPlayerControllerSnapshot.data}");
+                                if(audioPlayerControllerSnapshot.data == snapshot.data![index].audioId){
+                                  return IconButton(
+                                    icon: const Icon(
+                                      color: Colors.white,
+                                      Icons.pause,
+                                    ),
+                                    onPressed: () {
+                                      // audioPlayerController.audioIdControllerStream.sink.add(snapshot.data![index].audioId);
+                                      // setState(() {
+                                      //   audioPlayerController.playAudioList(
+                                      //     audioPlayerController
+                                      //         .isPlayedList[index],
+                                      //     index,
+                                      //   );
+                                      // });
+                                    },
+                                  );
+                                }else{
+                                  return IconButton(
                                     icon: const Icon(
                                       color: Colors.white,
                                       Icons.play_arrow,
                                     ),
                                     onPressed: () {
-                                      setState(() {
-                                        audioDriftController.playAudio(
-                                            audioDriftController.isPlayedList[index],
-                                            snapshot.data![index].audioId,
-                                            index,
-                                            snapshot.data![index].audioURL!);
-                                      });
+                                      audioPlayerController.audioIdControllerStream.sink.add(snapshot.data![index].audioId);
+                                      // setState(() {
+                                      //   audioPlayerController.playAudioList(
+                                      //     audioPlayerController
+                                      //         .isPlayedList[index],
+                                      //     index,
+                                      //   );
+                                      // });
                                     },
-                                  )
-                                : IconButton(
-                                    icon: const Icon(
-                                        color: Colors.white, Icons.pause),
-                                    onPressed: () {
-                                      setState(() {
-                                        audioDriftController.playAudio(
-                                            audioDriftController.isPlayedList[index],
-                                            snapshot.data![index].audioId,
-                                            index,
-                                            snapshot.data![index].audioURL!);
-                                      });
-                                    },
-                                  ),
+                                  );
+                                }
+
+                              }
+                            )
+                                // : IconButton(
+                                //     icon: const Icon(
+                                //         color: Colors.white, Icons.pause),
+                                //     onPressed: () {
+                                //       setState(() {
+                                //         audioPlayerController.playAudioList(
+                                //           audioPlayerController
+                                //               .isPlayedList[index],
+                                //           index,
+                                //         );
+                                //       });
+                                //     },
+                                //   ),
                           ),
                         ),
                       ),

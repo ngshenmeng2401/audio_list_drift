@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:audio_player_list_with_drift/screen/controller/audio_drift_controller.dart';
+import 'package:audio_player_list_with_drift/screen/controller/audio_player_controller.dart';
 import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
@@ -24,6 +25,7 @@ class EditAudioWithGetItScreen extends StatefulWidget {
 class _EditAudioWithGetItScreenState extends State<EditAudioWithGetItScreen> {
 
   final AudioDriftController audioDriftController = AudioDriftController();
+  final AudioPlayerController audioPlayerController = AudioPlayerController();
   AudioEntityData? _audioEntityData;
 
   @override

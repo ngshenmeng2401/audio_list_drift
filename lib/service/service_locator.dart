@@ -12,5 +12,7 @@ Future<void> setupServiceLocator() async {
   
   getIt.registerLazySingleton<AudioDriftController>(() => AudioDriftController());
 
+  // getIt.registerLazySingleton<AudioPlayerController>(() => AudioPlayerController());
 
+  getIt.registerSingleton<AudioPlayerController>(AudioPlayerController());
 }
