@@ -1,5 +1,5 @@
 import 'package:audio_player_list_with_drift/db/app_db.dart';
-import 'package:audio_player_list_with_drift/screen/controller/audio_drift_controller.dart';
+import 'package:audio_player_list_with_drift/screen/controller/audio_list_controller.dart';
 import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
@@ -20,7 +20,10 @@ class AddAudioWithGetItScreen extends StatefulWidget {
 
 class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
 
-  final AudioDriftController audioDriftController = AudioDriftController();
+  final TextEditingController musicNameController = TextEditingController();
+  final TextEditingController musicURLController = TextEditingController();
+  final TextEditingController totalLengthController = TextEditingController();
+  var isEmptyAdd = false;
 
   @override
   void initState() {
@@ -30,10 +33,56 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
 
   @override
   void dispose() {
-    audioDriftController.musicNameController.dispose();
-    audioDriftController.musicURLController.dispose();
-    audioDriftController.totalLengthController.dispose();
+    musicNameController.dispose();
+    musicURLController.dispose();
+    totalLengthController.dispose();
     super.dispose();
+  }
+
+  void checkTextFieldIsEmpty() {
+    if (musicNameController.text.isEmpty ||
+        musicURLController.text.isEmpty ||
+        totalLengthController.text.isEmpty) {
+      isEmptyAdd = false;
+    } else {
+      isEmptyAdd = true;
+    }
+  }
+
+  void addAudioToDb(BuildContext context) {
+    final entity = AudioEntityCompanion(
+      audioName: drift.Value(musicNameController.text),
+      audioURL: drift.Value(musicURLController.text),
+      totalLength: drift.Value(int.parse(totalLengthController.text)),
+      playPosition: const drift.Value(0),
+      isPlaying: const drift.Value(false),
+    );
+
+    getIt.get<AppDb>().insertAudio(entity).then((value) => showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add Successful'),
+          content: const Text(
+            '',
+          ),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    ));
+    musicNameController.clear();
+    musicURLController.clear();
+    totalLengthController.clear();
   }
 
   Future<bool> _onWillPop() async {
@@ -62,11 +111,11 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
                     enableInteractiveSelection: true,
                     onChanged: (value) => {
                       setState(() {
-                        audioDriftController.checkTextFieldIsEmpty();
+                        checkTextFieldIsEmpty();
                       })
                     },
                     keyboardType: TextInputType.name,
-                    controller: audioDriftController.musicNameController,
+                    controller: musicNameController,
                     decoration: const InputDecoration(
                       labelText: "Music Name",
                     ),
@@ -76,11 +125,11 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
                     enableInteractiveSelection: true,
                     onChanged: (value) => {
                       setState(() {
-                        audioDriftController.checkTextFieldIsEmpty();
+                        checkTextFieldIsEmpty();
                       })
                     },
                     keyboardType: TextInputType.name,
-                    controller: audioDriftController.musicURLController,
+                    controller: musicURLController,
                     decoration: const InputDecoration(
                       labelText: "Music URL",
                     ),
@@ -90,11 +139,11 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
                     enableInteractiveSelection: true,
                     onChanged: (value) => {
                       setState(() {
-                        audioDriftController.checkTextFieldIsEmpty();
+                        checkTextFieldIsEmpty();
                       })
                     },
                     keyboardType: TextInputType.number,
-                    controller: audioDriftController.totalLengthController,
+                    controller: totalLengthController,
                     decoration: const InputDecoration(
                       labelText: "Total Length",
                     ),
@@ -107,12 +156,10 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
                       minWidth: screenWidth,
                       height: screenHeight / 18,
                       color: Colors.blue,
-                      onPressed: !audioDriftController.isEmptyAdd
+                      onPressed: !isEmptyAdd
                           ? null
                           : () {
-                        audioDriftController.addAudioToDb(context);
-                              // addIndex++;
-                              // Navigator.pop(context, addIndex.toString());
+                        addAudioToDb(context);
                             },
                       child: const Text("Add",
                           style: TextStyle(
@@ -131,7 +178,6 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
 
 class AddAudioWithGetItScreenArguments {
   final Function() backButtonCallback;
-  final Function() backButtonCallback2;
 
-  AddAudioWithGetItScreenArguments({required this.backButtonCallback, required this.backButtonCallback2});
+  AddAudioWithGetItScreenArguments({required this.backButtonCallback});
 }
