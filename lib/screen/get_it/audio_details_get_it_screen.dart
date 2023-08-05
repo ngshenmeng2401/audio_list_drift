@@ -15,81 +15,75 @@ class AudioDetailsWithGetItScreen extends StatefulWidget {
   const AudioDetailsWithGetItScreen({
     Key? key,
     required Object? arguments,
-  })  : assert(arguments != null &&
-            arguments is AudioDetailWithGetItScreenArguments),
+  })  : assert(arguments != null && arguments is AudioDetailWithGetItScreenArguments),
         this.arguments = arguments as AudioDetailWithGetItScreenArguments,
         super(key: key);
 
   @override
-  State<AudioDetailsWithGetItScreen> createState() =>
-      _AudioDetailsWithGetItScreenState();
+  State<AudioDetailsWithGetItScreen> createState() => _AudioDetailsWithGetItScreenState();
 }
 
-class _AudioDetailsWithGetItScreenState
-    extends State<AudioDetailsWithGetItScreen> {
+class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScreen> {
   AudioEntityData? _audioEntityData;
-  final StreamController<AudioEntityData> _audioController =
-      StreamController<AudioEntityData>();
+  final StreamController<AudioEntityData> _audioDetailsController = StreamController<AudioEntityData>();
 
-  Stream<AudioEntityData> get _audioStream => _audioController.stream;
+  Stream<AudioEntityData> get _audioStream => _audioDetailsController.stream;
 
   final GetIt getIt = GetIt.instance;
-  late AudioPlayerController audioPlayerController;
+  final AudioPlayerController audioPlayerController = GetIt.instance.get<AudioPlayerController>();
+
+  @override
+  void setState(VoidCallback fn) {
+    // TODO: implement setState
+    if(mounted){
+      super.setState(fn);
+    }
+  }
 
   @override
   void initState() {
-    getAudioData();
-    setState(() {
-    });
-    // audioPlayerController.buttonControllerStream.sink.add(false);
     super.initState();
-    audioPlayerController = getIt.get<AudioPlayerController>();
+    getAudioData();
+    print("audioId in init: ${widget.arguments.audioId}");
   }
 
   @override
   void dispose() {
-    _audioController.close();
+    _audioDetailsController.close();
     // audioPlayerController.audioPlayer.dispose();
     super.dispose();
   }
 
   Future<void> getAudioData() async {
     try {
-      _audioEntityData =
-          await getIt.get<AppDb>().getAudio(widget.arguments.audioId);
+      _audioEntityData = await getIt.get<AppDb>().getAudio(widget.arguments.audioId);
       setState(() {
         _audioEntityData = _audioEntityData;
       });
 
       if (_audioEntityData != null) {
-        _audioController.sink.add(_audioEntityData!);
-        if (_audioEntityData!.audioURL != null) {
-          await audioPlayerController.audioPlayer
-              .setUrl(_audioEntityData!.audioURL!);
-        }
+        _audioDetailsController.sink.add(_audioEntityData!);
+        // if (_audioEntityData!.audioURL != null) {
+        //   await audioPlayerController.audioPlayer.setUrl(_audioEntityData!.audioURL!);
+        // }
       }
       if (audioPlayerController.audioPlayer.duration != null) {
-        audioPlayerController.duration =
-            audioPlayerController.audioPlayer.duration!;
+        audioPlayerController.duration = audioPlayerController.audioPlayer.duration!;
       }
     } catch (ex) {
       Fimber.e('d;;exception', ex: ex);
     }
 
-    print("duration ${audioPlayerController.duration}");
     setState(() {});
     audioPlayerController.audioPlayer.positionStream.listen((event) {
       audioPlayerController.position = event;
       setState(() {
-        print("position: ${audioPlayerController.position}");
       });
     });
   }
 
   void navigateToEditAudioScreen(int audioId) async {
-    await Navigator.pushNamed(context, AppRouter.editAudioWithGetItScreen,
-        arguments: EditAudioWithGetItScreenArguments(
-            audioId: audioId, backButtonCallback: getAudioData));
+    await Navigator.pushNamed(context, AppRouter.editAudioWithGetItScreen, arguments: EditAudioWithGetItScreenArguments(audioId: audioId, backButtonCallback: getAudioData));
   }
 
   Future<void> showDeleteAudioDialog(BuildContext context) {
@@ -132,15 +126,22 @@ class _AudioDetailsWithGetItScreenState
     getIt.get<AppDb>().deleteAudio(widget.arguments.audioId);
   }
 
-  Widget _renderAudioSlider(int playedPosition, int totalLength) {
-    print("Position: ${audioPlayerController.position}");
+  Widget _renderAudioSlider(int audioId, int playedPosition, int totalLength) {
+    // print("audioId in slider: $audioId");
+    if(audioPlayerController.currentIndexAudioButton == widget.arguments.index){
+      return Slider(
+          min: 0.0,
+          max: audioPlayerController.duration.inSeconds.toDouble(),
+          value: audioPlayerController.position.inSeconds.toDouble() == audioPlayerController.duration.inSeconds.toDouble() ? 0 : audioPlayerController.position.inSeconds.toDouble(),
+          onChanged: (double value) {
+            audioPlayerController.audioPlayer
+                .seek(Duration(seconds: value.toInt()));
+          });
+    }
     return Slider(
         min: 0.0,
         max: audioPlayerController.duration.inSeconds.toDouble(),
-        value: audioPlayerController.position.inSeconds.toDouble() ==
-                audioPlayerController.duration.inSeconds.toDouble()
-            ? 0
-            : audioPlayerController.position.inSeconds.toDouble(),
+        value: 0,
         onChanged: (double value) {
           // audioPlayerController.audioPlayer
           //     .seek(Duration(seconds: value.toInt()));
@@ -148,24 +149,24 @@ class _AudioDetailsWithGetItScreenState
   }
 
   Widget _renderPlayDuration(int total) {
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 9.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          audioPlayerController.position.inSeconds.toDouble() ==
-                  audioPlayerController.duration.inSeconds.toDouble()
-              ? Text(
-                  _formatDuration(const Duration(seconds: 0)),
-                  style: const TextStyle(fontSize: 16),
-                )
-              : Text(
-                  // "0",
-                  _formatDuration(Duration(
-                      seconds:
-                          audioPlayerController.position.inSeconds.toInt())),
-                  style: const TextStyle(fontSize: 16),
-                ),
+          if(audioPlayerController.currentIndexAudioButton != widget.arguments.index || audioPlayerController.position.inSeconds.toDouble() == audioPlayerController.duration.inSeconds.toDouble())...{
+            Text(
+              _formatDuration(const Duration(seconds: 0)),
+              style: const TextStyle(fontSize: 16),
+            )
+          } else...{
+            Text(
+              // "0",
+              _formatDuration(Duration(seconds: audioPlayerController.position.inSeconds.toInt())),
+              style: const TextStyle(fontSize: 16),
+            ),
+          },
           Text(
             // "0",
             _formatDuration(Duration(seconds: total)),
@@ -177,10 +178,8 @@ class _AudioDetailsWithGetItScreenState
   }
 
   String _formatDuration(Duration duration) {
-    String playedMinutesString =
-        duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    String playedSecondsString =
-        duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    String playedMinutesString = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
+    String playedSecondsString = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
 
     return '$playedMinutesString:$playedSecondsString';
   }
@@ -205,128 +204,142 @@ class _AudioDetailsWithGetItScreenState
         ],
       ),
       body: SingleChildScrollView(
-        child: Center(
-            child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
-                child: StreamBuilder(
-                    stream: _audioStream,
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        return Column(
-                          children: [
-                            Text(
-                              snapshot.data!.audioName!,
-                              style: const TextStyle(fontSize: 24),
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            _renderAudioSlider(snapshot.data!.playPosition!,
-                                snapshot.data!.totalLength!),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            _renderPlayDuration(snapshot.data!.totalLength!),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            ValueListenableBuilder<CurrentPlayingInfo>(
-                              valueListenable:
-                              audioPlayerController.currentPlayingInfo,
-                              builder: (context, value, child) {
-                                var iconData = Icons.play_arrow;
+          child: Center(
+              child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+                  child: StreamBuilder(
+                      stream: _audioStream,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          return Column(
+                            children: [
+                              Text(
+                                snapshot.data!.audioName!,
+                                style: const TextStyle(fontSize: 24),
+                              ),
+                              const SizedBox(
+                                height: 20,
+                              ),
+                              _renderAudioSlider(snapshot.data!.audioId!, snapshot.data!.playPosition!, snapshot.data!.totalLength!),
+                              const SizedBox(
+                                height: 20,
+                              ),
+                              _renderPlayDuration(snapshot.data!.totalLength!),
+                              const SizedBox(
+                                height: 20,
+                              ),
+                              ValueListenableBuilder<CurrentPlayingInfo>(
+                                valueListenable: audioPlayerController.currentPlayingInfo,
+                                builder: (context, value, child) {
+                                  var iconData = Icons.play_arrow;
+                                  var audioPlayerState = AudioPlayerState.play;
 
-                                if (value.audioId == widget.arguments.audioId) {
-                                  iconData = value.playerState == AudioPlayerState.play ? Icons.pause : Icons.play_arrow;
-                                }
-
-                                return Container(
-                                  height: screenHeight * 0.2,
-                                  width: screenWidth * 0.2,
-                                  decoration: const BoxDecoration(
-                                      color: Colors.blue, shape: BoxShape.circle),
-                                  child: IconButton(
-                                    icon: Icon(
-                                      iconData,
-                                      color: Colors.white,
-                                      size: 50,
+                                  if (value.audioId == widget.arguments.audioId) {
+                                    iconData = value.playerState == AudioPlayerState.play ? Icons.pause : Icons.play_arrow;
+                                    audioPlayerState = value.playerState == AudioPlayerState.play ? AudioPlayerState.pause : AudioPlayerState.play;
+                                    if(audioPlayerController.position.inSeconds == audioPlayerController.duration.inSeconds){
+                                      Future.delayed(Duration.zero,(){
+                                        audioPlayerController.updateButtonSongsEnd();
+                                      });
+                                    }
+                                  }
+                                  return Container(
+                                    height: screenHeight * 0.2,
+                                    width: screenWidth * 0.2,
+                                    decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+                                    child: IconButton(
+                                      icon: Icon(
+                                        iconData,
+                                        color: Colors.white,
+                                        size: 50,
+                                      ),
+                                      onPressed: () async {
+                                        if(audioPlayerState == AudioPlayerState.stop){
+                                          await audioPlayerController.audioPlayer.setUrl(snapshot.data!.audioURL!);
+                                        }
+                                        audioPlayerController.currentPlayingInfo.value = CurrentPlayingInfo(
+                                          audioId: widget.arguments.audioId,
+                                          playerState: value.playerState == AudioPlayerState.play ? AudioPlayerState.pause : AudioPlayerState.play,
+                                        );
+                                        audioPlayerController.playAudioList(
+                                            audioPlayerState,
+                                            snapshot.data!.audioURL!,
+                                            widget.arguments.index
+                                        );
+                                      },
                                     ),
-                                    onPressed: () {
-                                      audioPlayerController.currentPlayingInfo.value =
-                                          CurrentPlayingInfo(
-                                            audioId: widget.arguments.audioId,
-                                            playerState: value.playerState == AudioPlayerState.play ? AudioPlayerState.pause : AudioPlayerState.play,
-                                          );
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
-                          //   Container(
-                          //     height: screenHeight * 0.2,
-                          //     width: screenWidth * 0.2,
-                          //     decoration: const BoxDecoration(
-                          //         color: Colors.blue, shape: BoxShape.circle),
-                          //     child: !audioPlayerController.isPlaying! ||
-                          //             audioPlayerController.position.inSeconds
-                          //                     .toDouble() ==
-                          //                 audioPlayerController
-                          //                     .duration.inSeconds
-                          //                     .toDouble()
-                          //         ? IconButton(
-                          //             icon: const Icon(
-                          //               Icons.play_arrow,
-                          //               color: Colors.white,
-                          //               size: 50,
-                          //             ),
-                          //             onPressed: () {
-                          //               setState(() {
-                          //                 audioPlayerController.playAudio(
-                          //                   audioPlayerController.isPlaying!,
-                          //                   snapshot.data!.playPosition!,
-                          //                   widget.arguments.index,
-                          //                 );
-                          //               });
-                          //             },
-                          //           )
-                          //         : IconButton(
-                          //             icon: const Icon(
-                          //               Icons.pause,
-                          //               color: Colors.white,
-                          //               size: 50,
-                          //             ),
-                          //             onPressed: () {
-                          //               setState(() {
-                          //                 audioPlayerController.playAudio(
-                          //                   audioPlayerController.isPlaying!,
-                          //                   snapshot.data!.playPosition!,
-                          //                   widget.arguments.index,
-                          //                 );
-                          //               });
-                          //             },
-                          //           ),
-                          //   ),
-                          ],
-                        );
-                      }
-                      if (snapshot.hasError) {
-                        return const Text("Error");
-                      }
-                      if (snapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return const CircularProgressIndicator();
-                      }
-                      return const Text("No data");
-                    })
-                ))
-      ),
+                                  );
+                                },
+                              ),
+                              //   Container(
+                              //     height: screenHeight * 0.2,
+                              //     width: screenWidth * 0.2,
+                              //     decoration: const BoxDecoration(
+                              //         color: Colors.blue, shape: BoxShape.circle),
+                              //     child: !audioPlayerController.isPlaying! ||
+                              //             audioPlayerController.position.inSeconds
+                              //                     .toDouble() ==
+                              //                 audioPlayerController
+                              //                     .duration.inSeconds
+                              //                     .toDouble()
+                              //         ? IconButton(
+                              //             icon: const Icon(
+                              //               Icons.play_arrow,
+                              //               color: Colors.white,
+                              //               size: 50,
+                              //             ),
+                              //             onPressed: () {
+                              //               setState(() {
+                              //                 audioPlayerController.playAudio(
+                              //                   audioPlayerController.isPlaying!,
+                              //                   snapshot.data!.playPosition!,
+                              //                   widget.arguments.index,
+                              //                 );
+                              //               });
+                              //             },
+                              //           )
+                              //         : IconButton(
+                              //             icon: const Icon(
+                              //               Icons.pause,
+                              //               color: Colors.white,
+                              //               size: 50,
+                              //             ),
+                              //             onPressed: () {
+                              //               setState(() {
+                              //                 audioPlayerController.playAudio(
+                              //                   audioPlayerController.isPlaying!,
+                              //                   snapshot.data!.playPosition!,
+                              //                   widget.arguments.index,
+                              //                 );
+                              //               });
+                              //             },
+                              //           ),
+                              //   ),
+                            ],
+                          );
+                        }
+                        if (snapshot.hasError) {
+                          return const Text("Error");
+                        }
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const CircularProgressIndicator();
+                        }
+                        return const Text("No data");
+                      })))),
     );
   }
 }
 
 class AudioDetailWithGetItScreenArguments {
   int audioId;
+  int index;
+  // String audioURL;
 
-  AudioDetailWithGetItScreenArguments(
-      {required this.audioId,});
+
+  AudioDetailWithGetItScreenArguments({
+    required this.audioId,
+    required this.index,
+    // required this.audioURL,
+
+  });
 }

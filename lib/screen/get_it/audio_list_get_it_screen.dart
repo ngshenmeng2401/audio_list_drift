@@ -9,7 +9,6 @@ import 'package:audio_player_list_with_drift/screen/get_it/audio_details_get_it_
 import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
-import 'package:flutter_fimber/flutter_fimber.dart';
 import 'package:get_it/get_it.dart';
 
 class AudioListWithGetItScreen extends StatefulWidget {
@@ -20,21 +19,30 @@ class AudioListWithGetItScreen extends StatefulWidget {
 }
 
 class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
-  final audioListController = GetIt.instance.get<AudioListController>();
+  final AudioListController audioListController = GetIt.instance.get<AudioListController>();
   final AudioPlayerController audioPlayerController = GetIt.instance.get<AudioPlayerController>();
 
   bool isPlaying = false;
 
   @override
+  void setState(VoidCallback fn) {
+    // TODO: implement setState
+    if(mounted){
+      super.setState(fn);
+    }
+  }
+
+  @override
   void initState() {
     super.initState();
     audioListController.refreshAudioList();
+    audioPlayerController.initAudioPlayer();
 
     setState(() {});
     audioPlayerController.audioPlayer.positionStream.listen((event) {
       audioPlayerController.position = event;
       setState(() {
-        print("position: ${audioPlayerController.position}");
+        // print("position: ${audioPlayerController.position}");
       });
     });
   }
@@ -105,6 +113,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
     Navigator.pushNamed(context, AppRouter.audioDetailsWithGetItScreen,
         arguments: AudioDetailWithGetItScreenArguments(
           audioId: audioId,
+          index: index
         ));
   }
 
@@ -112,12 +121,13 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
     if (audioPlayerState != AudioPlayerState.play) {
       return Row(
         children: [
-          audioPlayerController.position.inSeconds.toDouble() == audioPlayerController.duration.inSeconds.toDouble()
-              ? Text(
-                  _formatDuration(const Duration(seconds: 0)),
-                  style: const TextStyle(fontSize: 14),
-                )
-              : Text(
+          // audioPlayerController.position.inSeconds.toDouble() == audioPlayerController.duration.inSeconds.toDouble()
+          //     ? Text(
+          //         _formatDuration(const Duration(seconds: 0)),
+          //         style: const TextStyle(fontSize: 14),
+          //       )
+          //     :
+                Text(
                   _formatDuration(Duration(seconds: audioPlayerController.position.inSeconds.toInt())),
                   style: const TextStyle(fontSize: 14),
                 ),
@@ -184,7 +194,11 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                                 var audioPlayerState = AudioPlayerState.play;
 
                                 if (value.audioId == snapshot.data![index].audioId) {
-                                  audioPlayerState = value.playerState == AudioPlayerState.play ? AudioPlayerState.pause : AudioPlayerState.play;
+                                  // if(audioPlayerController.position.inSeconds == audioPlayerController.duration.inSeconds){
+                                  //   audioPlayerState = AudioPlayerState.play;
+                                  // }else {
+                                    audioPlayerState = value.playerState == AudioPlayerState.play ? AudioPlayerState.pause : AudioPlayerState.play;
+                                  // }
                                 }
                                 return _renderPlayDuration(snapshot.data![index].totalLength!, audioPlayerState);
                               }),
@@ -194,9 +208,20 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                               valueListenable: audioPlayerController.currentPlayingInfo,
                               builder: (context, iconValue, child) {
                                 var iconData = Icons.play_arrow;
+                                var audioPlayerState = AudioPlayerState.play;
 
                                 if (iconValue.audioId == snapshot.data![index].audioId) {
+                                  if(iconValue.playerState == AudioPlayerState.play){
+                                    AudioPlayerState.pause;
+                                  }
                                   iconData = iconValue.playerState == AudioPlayerState.play ? Icons.pause : Icons.play_arrow;
+                                  audioPlayerState = iconValue.playerState == AudioPlayerState.play ? AudioPlayerState.pause : AudioPlayerState.play;
+                                  if(audioPlayerController.position.inSeconds == audioPlayerController.duration.inSeconds){
+                                    Future.delayed(Duration.zero,(){
+                                      audioPlayerController.updateButtonSongsEnd();
+                                    });
+                                  }
+
                                 }
 
                                 return IconButton(
@@ -210,13 +235,11 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                                       playerState: iconValue.playerState == AudioPlayerState.play ? AudioPlayerState.pause : AudioPlayerState.play,
                                     );
                                     // audioPlayerController.audioIdControllerStream.sink.add(snapshot.data![index].audioId);
-                                    // setState(() {
-                                    //   audioPlayerController.playAudioList(
-                                    //     audioPlayerController
-                                    //         .isPlayedList[index],
-                                    //     index,
-                                    //   );
-                                    // });
+                                    audioPlayerController.playAudioList(
+                                        audioPlayerState,
+                                        snapshot.data![index].audioURL!,
+                                        index
+                                    );
                                   },
                                 );
                               },
