@@ -1,8 +1,10 @@
 import 'package:audio_player_list_with_drift/db/app_db.dart';
 import 'package:audio_player_list_with_drift/screen/controller/audio_list_controller.dart';
+import 'package:audio_player_list_with_drift/screen/controller/audio_player_controller.dart';
 import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:get_it/get_it.dart';
 
 class AddAudioWithGetItScreen extends StatefulWidget {
   final AddAudioWithGetItScreenArguments arguments;
@@ -20,6 +22,7 @@ class AddAudioWithGetItScreen extends StatefulWidget {
 
 class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
 
+  final AudioPlayerController audioPlayerController = GetIt.instance.get<AudioPlayerController>();
   final TextEditingController musicNameController = TextEditingController();
   final TextEditingController musicURLController = TextEditingController();
   final TextEditingController totalLengthController = TextEditingController();
@@ -83,6 +86,7 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
     musicNameController.clear();
     musicURLController.clear();
     totalLengthController.clear();
+    audioPlayerController.addAudioPositionList();
   }
 
   Future<bool> _onWillPop() async {
