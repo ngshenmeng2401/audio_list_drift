@@ -54,7 +54,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
     super.dispose();
   }
 
-  Future<void> showDeleteAudioDialog(BuildContext context, int audioId) {
+  Future<void> showDeleteAudioDialog(BuildContext context, int audioId, int index) {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -79,7 +79,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
               ),
               child: const Text('OK'),
               onPressed: () {
-                _deleteAudio(audioId);
+                _deleteAudio(audioId, index);
                 Navigator.of(context).pop();
                 // setState(() {
                 getIt.get<AppDb>().getAudioList();
@@ -92,10 +92,10 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
     );
   }
 
-  void _deleteAudio(int audioId) {
+  void _deleteAudio(int audioId, int index) {
     getIt.get<AppDb>().deleteAudio(audioId);
-
     audioListController.getAudioListData();
+    getIt.get<AudioPlayerController>().removeAudioPositionList(index);
   }
 
   String _formatDuration(Duration duration) {
@@ -185,7 +185,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                             navigateToAudioDetailsScreen(snapshot.data![index].audioId, index, snapshot.data![index].audioURL!);
                           },
                           onLongPress: () {
-                            showDeleteAudioDialog(context, snapshot.data![index].audioId);
+                            showDeleteAudioDialog(context, snapshot.data![index].audioId, index);
                           },
                           title: Text(snapshot.data![index].audioName!),
                           subtitle: ValueListenableBuilder<CurrentPlayingInfo>(
@@ -249,7 +249,14 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                       ),
                     );
                   });
-            } else {
+            }
+            if(snapshot.connectionState == ConnectionState.active){
+              return const CircularProgressIndicator();
+            }
+            if(snapshot.hasError){
+              return const Center(child: Text("Error"));
+            }
+            else {
               return const Center(child: Text("No data"));
             }
           }),
