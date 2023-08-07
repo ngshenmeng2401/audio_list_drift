@@ -76,7 +76,7 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
 
     setState(() {});
     audioPlayerController.audioPlayer.positionStream.listen((event) {
-      audioPlayerController.position = event;
+      audioPlayerController.position = event.inSeconds.toInt();
       setState(() {
       });
     });
@@ -132,7 +132,7 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
       return Slider(
           min: 0.0,
           max: audioPlayerController.duration.inSeconds.toDouble(),
-          value: audioPlayerController.position.inSeconds.toDouble() == audioPlayerController.duration.inSeconds.toDouble() ? 0 : audioPlayerController.position.inSeconds.toDouble(),
+          value: audioPlayerController.position.toDouble() == audioPlayerController.duration.inSeconds.toDouble() ? 0 : audioPlayerController.position.toDouble(),
           onChanged: (double value) {
             audioPlayerController.audioPlayer
                 .seek(Duration(seconds: value.toInt()));
@@ -155,7 +155,7 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          if(audioPlayerController.currentIndexAudioButton != widget.arguments.index || audioPlayerController.position.inSeconds.toDouble() == audioPlayerController.duration.inSeconds.toDouble())...{
+          if(audioPlayerController.currentIndexAudioButton != widget.arguments.index || audioPlayerController.position == audioPlayerController.duration.inSeconds.toDouble())...{
             Text(
               _formatDuration(const Duration(seconds: 0)),
               style: const TextStyle(fontSize: 16),
@@ -163,7 +163,7 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
           } else...{
             Text(
               // "0",
-              _formatDuration(Duration(seconds: audioPlayerController.position.inSeconds.toInt())),
+              _formatDuration(Duration(seconds: audioPlayerController.position)),
               style: const TextStyle(fontSize: 16),
             ),
           },
@@ -237,7 +237,7 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
                                   if (value.audioId == widget.arguments.audioId) {
                                     iconData = value.playerState == AudioPlayerState.play ? Icons.pause : Icons.play_arrow;
                                     audioPlayerState = value.playerState == AudioPlayerState.play ? AudioPlayerState.pause : AudioPlayerState.play;
-                                    if(audioPlayerController.position.inSeconds == audioPlayerController.duration.inSeconds){
+                                    if(audioPlayerController.position == audioPlayerController.duration.inSeconds){
                                       Future.delayed(Duration.zero,(){
                                         audioPlayerController.updateButtonSongsEnd();
                                       });

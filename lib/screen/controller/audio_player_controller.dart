@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:audio_player_list_with_drift/db/app_db.dart';
+import 'package:audio_player_list_with_drift/service/service_locator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_fimber/flutter_fimber.dart';
 import 'package:just_audio/just_audio.dart';
 
 enum AudioPlayerState { play, pause, stop }
@@ -20,13 +22,12 @@ class CurrentPlayingInfo {
 
 class AudioPlayerController {
   List<AudioEntityData>? audioList;
-
-  // List<bool> isPlayedList = [];
-  bool? isPlaying = false;
+  // List<Duration> currentAudioPositionList = [];
+  List<int> currentAudioPositionList = [];
   final audioPlayer = AudioPlayer();
   Duration duration = const Duration();
-  Duration position = const Duration();
-  bool? buttonPlay = false;
+  // Duration position = const Duration();
+  int position = 0;
   int currentIndexAudioButton = 0;
 
   final currentPlayingInfo = ValueNotifier<CurrentPlayingInfo>(
@@ -63,18 +64,35 @@ class AudioPlayerController {
   Future<void> initAudioPlayer() async {
     String audioURL = "https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3";
 
-    await audioPlayer.setUrl(audioURL);
+    try{
+      await audioPlayer.setUrl(audioURL);
 
-    if(audioPlayer.duration != null){
-      duration = audioPlayer.duration!;
+      if(audioPlayer.duration != null){
+        duration = audioPlayer.duration!;
+      }
+
+      if(currentAudioPositionList != null){
+        currentAudioPositionList!.clear();
+      }
+      audioList = await getIt.get<AppDb>().getAudioList();
+
+      if(audioList != null){
+        print("audioList: ${audioList!.length}");
+        for(int i = 0 ; i < audioList!.length ; i++){
+          currentAudioPositionList!.insert( i, 0);
+          print("Current Audio Position List: ${currentAudioPositionList![i]}");
+        }
+
+      }
+
+    }catch(ex){
+      Fimber.e('d;;exception', ex: ex);
     }
-
-    print(audioURL);
   }
 
   Future<void> playAudioList(AudioPlayerState audioPlayerState, String audioURL, int audioPlayerIndex) async {
     // print("Current Player Index: $currentIndexAudioButton");
-    // print("Audio Player Index: $audioPlayerIndex");
+    print("Audio Player Index: $audioPlayerIndex");
     // print("Before Audio Player State: $audioPlayerState");
 
     try {
@@ -88,7 +106,7 @@ class AudioPlayerController {
           // currentPlayingInfo.value = currentPlayingInfo.value.copyWith(
           //   playerState: AudioPlayerState.play,
           // );
-          if (position == Duration.zero) {
+          if (position == 0) {
             await audioPlayer.setUrl(audioURL);
           }
           await audioPlayer.play();
@@ -117,7 +135,7 @@ class AudioPlayerController {
 
         currentIndexAudioButton = audioPlayerIndex;
         await audioPlayer.setUrl(audioURL);
-        await audioPlayer.seek(Duration(seconds: position.inSeconds.toInt())).then((value) => print('Succeeded')).onError((error, stackTrace) => print('Failed'));
+        await audioPlayer.seek(Duration(seconds: position)).then((value) => print('Succeeded')).onError((error, stackTrace) => print('Failed'));
         await audioPlayer.play();
         duration = audioPlayer.duration!;
 
@@ -130,11 +148,11 @@ class AudioPlayerController {
   }
 
   void updateButtonSongsEnd(){
-    print("Position in updateButtonSongsEnd: ${position.inSeconds}");
-    print("Duration in updateButtonSongsEnd: ${duration.inSeconds}");
+    // print("Position in updateButtonSongsEnd: ${position.inSeconds}");
+    // print("Duration in updateButtonSongsEnd: ${duration.inSeconds}");
     currentPlayingInfo.value = currentPlayingInfo.value.copyWith(
       playerState: AudioPlayerState.pause,
     );
-    position = Duration.zero;
+    position = 0;
   }
 }

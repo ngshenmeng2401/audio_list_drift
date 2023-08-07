@@ -40,7 +40,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
 
     setState(() {});
     audioPlayerController.audioPlayer.positionStream.listen((event) {
-      audioPlayerController.position = event;
+      audioPlayerController.position = event.inSeconds.toInt();
       setState(() {
         // print("position: ${audioPlayerController.position}");
       });
@@ -128,7 +128,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
           //       )
           //     :
                 Text(
-                  _formatDuration(Duration(seconds: audioPlayerController.position.inSeconds.toInt())),
+                  _formatDuration(Duration(seconds: audioPlayerController.position)),
                   style: const TextStyle(fontSize: 14),
                 ),
           const SizedBox(
@@ -216,7 +216,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                                   }
                                   iconData = iconValue.playerState == AudioPlayerState.play ? Icons.pause : Icons.play_arrow;
                                   audioPlayerState = iconValue.playerState == AudioPlayerState.play ? AudioPlayerState.pause : AudioPlayerState.play;
-                                  if(audioPlayerController.position.inSeconds == audioPlayerController.duration.inSeconds){
+                                  if(audioPlayerController.position == audioPlayerController.duration.inSeconds){
                                     Future.delayed(Duration.zero,(){
                                       audioPlayerController.updateButtonSongsEnd();
                                     });
