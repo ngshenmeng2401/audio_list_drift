@@ -22,13 +22,14 @@ class CurrentPlayingInfo {
 
 class AudioPlayerController {
   List<AudioEntityData>? audioList;
-  // List<Duration> currentAudioPositionList = [];
-  List<int> currentAudioPositionList = [];
+  List<int> audioPositionList = [];
+  // List<int> testList = [];
   final audioPlayer = AudioPlayer();
   Duration duration = const Duration();
   // Duration position = const Duration();
   int position = 0;
   int currentIndexAudioButton = 0;
+  int seekPosition = 0;
 
   final currentPlayingInfo = ValueNotifier<CurrentPlayingInfo>(
     CurrentPlayingInfo(
@@ -59,6 +60,7 @@ class AudioPlayerController {
   void dispose() {
     // _subscription?.cancel();
     currentPlayingInfo.dispose();
+    audioPositionList.clear();
   }
 
   Future<void> initAudioPlayer() async {
@@ -70,19 +72,15 @@ class AudioPlayerController {
       if(audioPlayer.duration != null){
         duration = audioPlayer.duration!;
       }
-
-      if(currentAudioPositionList != null){
-        currentAudioPositionList!.clear();
-      }
       audioList = await getIt.get<AppDb>().getAudioList();
 
       if(audioList != null){
-        print("audioList: ${audioList!.length}");
+        // print("audioList: ${audioList!.length}");
         for(int i = 0 ; i < audioList!.length ; i++){
-          currentAudioPositionList!.insert( i, 0);
-          print("Current Audio Position List: ${currentAudioPositionList![i]}");
-        }
+          audioPositionList.insert( i, 0);
 
+        }
+        print("Current Audio Position List: $audioPositionList");
       }
 
     }catch(ex){
@@ -91,21 +89,24 @@ class AudioPlayerController {
   }
 
   Future<void> playAudioList(AudioPlayerState audioPlayerState, String audioURL, int audioPlayerIndex) async {
-    // print("Current Player Index: $currentIndexAudioButton");
+    print("Current Player Index: $currentIndexAudioButton");
     print("Audio Player Index: $audioPlayerIndex");
     // print("Before Audio Player State: $audioPlayerState");
 
     try {
+      //to save the latest audio player position
+      audioPositionList[currentIndexAudioButton] = position;
+
       if (audioPlayerIndex == currentIndexAudioButton) {
+        print("hihi1");
         if (audioPlayerState == AudioPlayerState.pause) {
+          print("hihi2");
           await audioPlayer.pause();
           currentPlayingInfo.value = currentPlayingInfo.value.copyWith(
             playerState: AudioPlayerState.pause,
           );
         } else if (audioPlayerState == AudioPlayerState.play) {
-          // currentPlayingInfo.value = currentPlayingInfo.value.copyWith(
-          //   playerState: AudioPlayerState.play,
-          // );
+
           if (position == 0) {
             await audioPlayer.setUrl(audioURL);
           }
@@ -129,19 +130,22 @@ class AudioPlayerController {
         //     await audioPlayer.stop();
         // }
       } else {
+        print("hihi3");
+        currentIndexAudioButton = audioPlayerIndex;
+        await audioPlayer.setUrl(audioURL);
+        seekPosition =  audioPositionList[audioPlayerIndex];
+        await audioPlayer.seek(Duration(seconds: seekPosition == duration.inSeconds ? 0 : seekPosition));
+        await audioPlayer.play();
+        duration = audioPlayer.duration!;
+        // await Future.delayed(const Duration(milliseconds: 500));
         currentPlayingInfo.value = currentPlayingInfo.value.copyWith(
           playerState: AudioPlayerState.play,
         );
 
-        currentIndexAudioButton = audioPlayerIndex;
-        await audioPlayer.setUrl(audioURL);
-        await audioPlayer.seek(Duration(seconds: position)).then((value) => print('Succeeded')).onError((error, stackTrace) => print('Failed'));
-        await audioPlayer.play();
-        duration = audioPlayer.duration!;
-
       }
+      print("Audio Position List: {$audioPositionList}");
       // print("duration songs: $duration ");
-      // print("After Audio Player State: $audioPlayerState");
+      print("After Audio Player State: $audioPlayerState");
     } catch (ex) {
       ("Audio Player $ex");
     }
@@ -154,5 +158,21 @@ class AudioPlayerController {
       playerState: AudioPlayerState.pause,
     );
     position = 0;
+  }
+
+  void addAudioPositionList(){
+
+    audioPositionList.add(0);
+    print("New Audio Position List Added: $audioPositionList");
+  }
+
+  void removeAudioPositionList(int index){
+
+    audioPositionList.removeAt(index);
+    print("New Audio Position List Removed: $audioPositionList");
+    //to prevent the new audio use old seek position when add audio
+    seekPosition = 0;
+    //to prevent the next audio is not playing when delete the playing audio
+    currentIndexAudioButton = 0;
   }
 }
