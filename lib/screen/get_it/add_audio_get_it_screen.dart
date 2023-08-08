@@ -83,10 +83,11 @@ class _AddAudioWithGetItScreenState extends State<AddAudioWithGetItScreen> {
         );
       },
     ));
+
     musicNameController.clear();
     musicURLController.clear();
     totalLengthController.clear();
-    audioPlayerController.addAudioPositionList();
+    // audioPlayerController.addAudioPositionList();
   }
 
   Future<bool> _onWillPop() async {
