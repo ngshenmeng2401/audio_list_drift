@@ -9,26 +9,31 @@ import 'package:just_audio/just_audio.dart';
 enum AudioPlayerState { play, pause, stop }
 
 class CurrentPlayingInfo {
-  int audioId;
-  AudioPlayerState playerState;
+  final int audioId;
+  final AudioPlayerState playerState;
 
-  CurrentPlayingInfo({
+  const CurrentPlayingInfo({
     required this.audioId,
     required this.playerState,
   });
 
-  CurrentPlayingInfo copyWith({int? audioId, AudioPlayerState? playerState}) => CurrentPlayingInfo(audioId: audioId ?? this.audioId, playerState: playerState ?? this.playerState);
+   CurrentPlayingInfo copyWith({int? audioId, AudioPlayerState? playerState}) => CurrentPlayingInfo(audioId: audioId ?? this.audioId, playerState: playerState ?? this.playerState);
+}
+
+class AudioPlayHistoryInfo {
+   int audioId;
+   int pauseAt;
+
+   AudioPlayHistoryInfo(this.audioId, this.pauseAt);
 }
 
 class AudioPlayerController {
-  List<AudioEntityData>? audioList;
-  List<int> audioPositionList = [];
-  // List<int> testList = [];
+  List<AudioEntityData> audioList = [];
+  List<AudioPlayHistoryInfo> audioPlayHistoryList = [];
   final audioPlayer = AudioPlayer();
   Duration duration = const Duration();
-  // Duration position = const Duration();
   int position = 0;
-  int currentIndexAudioButton = 0;
+  int currentAudioButtonId = 0;
   int seekPosition = 0;
 
   final currentPlayingInfo = ValueNotifier<CurrentPlayingInfo>(
@@ -60,7 +65,7 @@ class AudioPlayerController {
   void dispose() {
     // _subscription?.cancel();
     currentPlayingInfo.dispose();
-    audioPositionList.clear();
+    audioPlayHistoryList.clear();
   }
 
   Future<void> initAudioPlayer() async {
@@ -76,11 +81,25 @@ class AudioPlayerController {
 
       if(audioList != null){
         // print("audioList: ${audioList!.length}");
-        for(int i = 0 ; i < audioList!.length ; i++){
-          audioPositionList.insert( i, 0);
+        audioPlayHistoryList.clear();
 
+        // audioList?.forEach((element) {
+        //   audioPlayHistoryList.add(AudioPlayHistoryInfo(element.audioId, 0));
+        // });
+
+        audioPlayHistoryList.addAll(audioList?.map((e) {
+          return AudioPlayHistoryInfo(e.audioId, 0);
+        }) ?? []);
+
+        for (var audioHistory in audioPlayHistoryList) {
+          print("Audio position history: ${audioHistory.audioId}");
         }
-        print("Current Audio Position List: $audioPositionList");
+
+        // final info = audioPlayHistoryList.firstWhere<>((element) => element.audioId == 1, orElse: null);
+        // audioPlayHistoryList.firstWhere((element) => false)
+        // audioPlayHistoryList[index].pauseAt = 1;
+
+
       }
 
     }catch(ex){
@@ -88,19 +107,26 @@ class AudioPlayerController {
     }
   }
 
-  Future<void> playAudioList(AudioPlayerState audioPlayerState, String audioURL, int audioPlayerIndex) async {
-    print("Current Player Index: $currentIndexAudioButton");
-    print("Audio Player Index: $audioPlayerIndex");
-    // print("Before Audio Player State: $audioPlayerState");
+  Future<void> playAudio(AudioPlayerState audioPlayerState, String audioURL, int audioId) async {
+    print("Current Audio Id: $currentAudioButtonId");
+    print("Audio Id: $audioId");
 
     try {
       //to save the latest audio player position
-      audioPositionList[currentIndexAudioButton] = position;
+      for (var audioHistory in audioPlayHistoryList) {
+        if(audioHistory.audioId == currentAudioButtonId) {
+          audioHistory.pauseAt = position;
+        }
+      }
+      // for(int i = 0 ; i < audioPlayHistoryList!.length ; i++){
+      //   audioPlayHistoryList[i].audioId == audioId;
+      //   audioPlayHistoryList.re
+      //   break;
+      // }
+      // audioPositionList[currentIndexAudioButton] = position;
 
-      if (audioPlayerIndex == currentIndexAudioButton) {
-        print("hihi1");
+      if (audioId == currentAudioButtonId) {
         if (audioPlayerState == AudioPlayerState.pause) {
-          print("hihi2");
           await audioPlayer.pause();
           currentPlayingInfo.value = currentPlayingInfo.value.copyWith(
             playerState: AudioPlayerState.pause,
@@ -130,10 +156,13 @@ class AudioPlayerController {
         //     await audioPlayer.stop();
         // }
       } else {
-        print("hihi3");
-        currentIndexAudioButton = audioPlayerIndex;
+        currentAudioButtonId = audioId;
         await audioPlayer.setUrl(audioURL);
-        seekPosition =  audioPositionList[audioPlayerIndex];
+        for (var audioHistory in audioPlayHistoryList) {
+          if(audioHistory.audioId == audioId){
+            seekPosition = audioHistory.pauseAt;
+          }
+        }
         await audioPlayer.seek(Duration(seconds: seekPosition == duration.inSeconds ? 0 : seekPosition));
         await audioPlayer.play();
         duration = audioPlayer.duration!;
@@ -143,9 +172,12 @@ class AudioPlayerController {
         );
 
       }
-      print("Audio Position List: {$audioPositionList}");
+      print("Audio position history:");
+      for (var audioHistory in audioPlayHistoryList) {
+        print("${audioHistory.audioId}: ${audioHistory.pauseAt}");
+      }
       // print("duration songs: $duration ");
-      print("After Audio Player State: $audioPlayerState");
+      // print("After Audio Player State: $audioPlayerState");
     } catch (ex) {
       ("Audio Player $ex");
     }
@@ -160,19 +192,26 @@ class AudioPlayerController {
     position = 0;
   }
 
-  void addAudioPositionList(){
+  void addAudioPositionList(int audioId){
 
-    audioPositionList.add(0);
-    print("New Audio Position List Added: $audioPositionList");
+    audioPlayHistoryList.add(AudioPlayHistoryInfo(audioId, 0));
+    print("New Audio Position List Added:");
+    for (var audioHistory in audioPlayHistoryList) {
+      print("${audioHistory.audioId}: ${audioHistory.pauseAt}");
+    }
   }
 
-  void removeAudioPositionList(int index){
+  void removeAudioPositionList(int audioId){
 
-    audioPositionList.removeAt(index);
-    print("New Audio Position List Removed: $audioPositionList");
+    audioPlayHistoryList.removeAt(audioId);
+    print("New Audio Position List Removed: $audioPlayHistoryList");
+    print("New Audio Position List Removed:");
+    for (var audioHistory in audioPlayHistoryList) {
+      print("${audioHistory.audioId}: ${audioHistory.pauseAt}");
+    }
     //to prevent the new audio use old seek position when add audio
     seekPosition = 0;
     //to prevent the next audio is not playing when delete the playing audio
-    currentIndexAudioButton = 0;
+    currentAudioButtonId = 0;
   }
 }
