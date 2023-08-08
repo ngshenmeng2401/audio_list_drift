@@ -95,7 +95,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
   void _deleteAudio(int audioId, int index) {
     getIt.get<AppDb>().deleteAudio(audioId);
     audioListController.getAudioListData();
-    getIt.get<AudioPlayerController>().removeAudioPositionList(index);
+    // getIt.get<AudioPlayerController>().removeAudioPositionList(index);
   }
 
   String _formatDuration(Duration duration) {
@@ -181,6 +181,7 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       child: Card(
                         child: ListTile(
+                          leading: Text(snapshot.data![index].audioId!.toString()),
                           onTap: () {
                             navigateToAudioDetailsScreen(snapshot.data![index].audioId, index, snapshot.data![index].audioURL!);
                           },
@@ -235,10 +236,10 @@ class _AudioListWithGetItScreenState extends State<AudioListWithGetItScreen> {
                                       playerState: iconValue.playerState == AudioPlayerState.play ? AudioPlayerState.pause : AudioPlayerState.play,
                                     );
                                     // audioPlayerController.audioIdControllerStream.sink.add(snapshot.data![index].audioId);
-                                    audioPlayerController.playAudioList(
+                                    audioPlayerController.playAudio(
                                         audioPlayerState,
                                         snapshot.data![index].audioURL!,
-                                        index
+                                        snapshot.data![index].audioId!
                                     );
                                   },
                                 );

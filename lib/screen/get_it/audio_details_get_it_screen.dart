@@ -128,7 +128,7 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
 
   Widget _renderAudioSlider(int audioId, int playedPosition, int totalLength) {
     // print("audioId in slider: $audioId");
-    if(audioPlayerController.currentIndexAudioButton == widget.arguments.index){
+    if(audioPlayerController.currentAudioButtonId == widget.arguments.audioId){
       return Slider(
           min: 0.0,
           max: audioPlayerController.duration.inSeconds.toDouble(),
@@ -155,7 +155,7 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          if(audioPlayerController.currentIndexAudioButton != widget.arguments.index || audioPlayerController.position == audioPlayerController.duration.inSeconds.toDouble())...{
+          if(audioPlayerController.currentAudioButtonId != widget.arguments.audioId || audioPlayerController.position == audioPlayerController.duration.inSeconds.toDouble())...{
             Text(
               _formatDuration(const Duration(seconds: 0)),
               style: const TextStyle(fontSize: 16),
@@ -228,7 +228,7 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
                               const SizedBox(
                                 height: 20,
                               ),
-                              ValueListenableBuilder<CurrentPlayingInfo>(
+                                ValueListenableBuilder<CurrentPlayingInfo>(
                                 valueListenable: audioPlayerController.currentPlayingInfo,
                                 builder: (context, value, child) {
                                   var iconData = Icons.play_arrow;
@@ -261,10 +261,10 @@ class _AudioDetailsWithGetItScreenState extends State<AudioDetailsWithGetItScree
                                           audioId: widget.arguments.audioId,
                                           playerState: value.playerState == AudioPlayerState.play ? AudioPlayerState.pause : AudioPlayerState.play,
                                         );
-                                        audioPlayerController.playAudioList(
+                                        audioPlayerController.playAudio(
                                             audioPlayerState,
                                             snapshot.data!.audioURL!,
-                                            widget.arguments.index
+                                            widget.arguments.audioId
                                         );
                                       },
                                     ),
