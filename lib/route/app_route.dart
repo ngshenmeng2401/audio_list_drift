@@ -12,9 +12,8 @@ import 'package:flutter/material.dart';
 class AppRouter{
 
   // static const String bottomNavigationBarWidget = '/';
-  static const String audioPlayerListWithGetItScreen = '/';
 
-  static const String audioPlayerListWithProviderScreen = '/audioPlayerListWithProviderScreen';
+  static const String audioPlayerListWithProviderScreen = '/';
   static const String addAudioWithProviderScreen = '/addAudioWithProviderScreen';
   static const String audioDetailsWithProviderScreen = '/audioDetailsWithProviderScreen';
   static const String editAudioWithProviderScreen = '/editAudioWithProviderScreen';
@@ -35,7 +34,7 @@ class AppRouter{
       case audioPlayerListWithProviderScreen:
         return MaterialPageRoute(builder: (_) => const AudioListWithProviderScreen());
       case addAudioWithProviderScreen:
-        return MaterialPageRoute(builder: (_) => AddAudioWithProviderScreen(arguments: args,));
+        return MaterialPageRoute(builder: (_) => const AddAudioWithProviderScreen());
 
       case editAudioWithProviderScreen:
         return MaterialPageRoute(builder: (_) => EditAudioWithProviderScreen(arguments: args));
@@ -43,8 +42,8 @@ class AppRouter{
       case audioDetailsWithProviderScreen:
         return MaterialPageRoute(builder: (_) => AudioDetailsWithProviderScreen(arguments: args));
 
-      case audioPlayerListWithGetItScreen:
-        return MaterialPageRoute(builder: (_) => const AudioListWithGetItScreen());
+      // case audioPlayerListWithGetItScreen:
+      //   return MaterialPageRoute(builder: (_) => const AudioListWithGetItScreen());
 
       case addAudioWithGetItScreen:
         return MaterialPageRoute(builder: (_) => AddAudioWithGetItScreen(arguments: args,));
