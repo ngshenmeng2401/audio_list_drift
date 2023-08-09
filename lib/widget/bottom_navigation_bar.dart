@@ -19,7 +19,7 @@ class _BottomNavigationBarWidgetState extends State<BottomNavigationBarWidget> {
 
     super.initState();
     _tabs = [
-      const AudioListWithProviderScreen(),
+      // const AudioListWithProviderScreen(),
       const AudioListWithGetItScreen(),
     ];
   }
