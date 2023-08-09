@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audio_player_list_with_drift/db/app_db.dart';
+import 'package:audio_player_list_with_drift/screen/controller/audio_list_provider_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter_fimber/flutter_fimber.dart';
@@ -170,6 +171,7 @@ class _EditAudioWithProviderScreenState extends State<EditAudioWithProviderScree
         );
       },
     ));
+    Provider.of<AudioListProviderController>(context, listen: false).refreshAudioList(context);
   }
 
   Future<bool> _onWillPop() async {
