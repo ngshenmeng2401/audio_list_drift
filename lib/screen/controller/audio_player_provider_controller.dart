@@ -40,6 +40,15 @@ class AudioPlayerProviderController extends ChangeNotifier {
   void playerStream (){
     audioPlayer.positionStream.listen((event) {
       position = event.inSeconds.toInt();
+      // suppose check in here, is in controller
+      // if(position == totalLength){
+      //   currentPlayingInfo = CurrentPlayingInfo(
+      //     audioId: audioId,
+      //     playerState: AudioPlayerState.pause,
+      //   );
+      //   position = 0;
+      // notifyListeners();
+      // }
       notifyListeners();
     });
   }

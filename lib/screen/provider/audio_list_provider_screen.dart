@@ -150,7 +150,7 @@ class _AudioListWithProviderScreenState extends State<AudioListWithProviderScree
     double screenHeight = MediaQuery.of(context).size.height;
     // double screenWidth = MediaQuery.of(context).size.width;
 
-    _audioPlayerProviderController ??= context.watch<AudioPlayerProviderController>();
+    _audioPlayerProviderController ??= context.read<AudioPlayerProviderController>();
     // _audioPlayerProviderController ??= context.select<AudioPlayerProviderController, CurrentPlayingInfo>((value) => null)
 
     return Scaffold(
@@ -213,9 +213,10 @@ class _AudioListWithProviderScreenState extends State<AudioListWithProviderScree
                                   }
                                   iconData = info.playerState == AudioPlayerState.play ? Icons.pause : Icons.play_arrow;
                                   audioPlayerState = info.playerState == AudioPlayerState.play ? AudioPlayerState.pause : AudioPlayerState.play;
-                                  Future.delayed(Duration.zero,(){
-                                    _audioPlayerProviderController!.updateButtonSongsEnd(snapshot.data![index].audioId, snapshot.data![index].totalLength!);
-                                  });
+                                  //if user leave tis screen, may cause no function
+                                  // Future.delayed(Duration.zero,(){
+                                  //   _audioPlayerProviderController!.updateButtonSongsEnd(snapshot.data![index].audioId, snapshot.data![index].totalLength!);
+                                  // });
                                 }
                                 return Container(
                                     decoration: BoxDecoration(color: Colors.blue, borderRadius: BorderRadius.circular(50)),
